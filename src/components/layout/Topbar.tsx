@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FiCheckSquare, FiLogOut, FiMenu, FiUser } from 'react-icons/fi';
 import { Avatar } from '@/components/ui/Avatar';
 import { useAuth } from '@/hooks/useAuth';
-import { useLogoutMutation } from '@/hooks/queries/auth.queries';
-import { useMyProfileQuery } from '@/hooks/queries/profile.queries';
+import { useLogoutMutation } from '@/hooks/auth/auth.queries';
+import { useMyProfileQuery } from '@/hooks/profile/profile.queries';
 import { ROLE_LABEL } from '@/types/user';
 
 export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {

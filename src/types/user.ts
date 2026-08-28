@@ -1,13 +1,14 @@
-export type RoleCode = 'ADMIN' | 'BA' | 'USER';
+export type RoleCode = 'ADMIN' | 'BA' | 'USER' | 'LEAD';
 
 export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'LOCKED';
 
-export const ROLE_CODES: RoleCode[] = ['ADMIN', 'BA', 'USER'];
+export const ROLE_CODES: RoleCode[] = ['ADMIN', 'BA', 'USER', 'LEAD'];
 
 export const ROLE_LABEL: Record<RoleCode, string> = {
   ADMIN: 'Quản trị',
   BA: 'BA',
   USER: 'Người dùng',
+  LEAD: 'Leader',
 };
 
 export const USER_STATUS_LABEL: Record<UserStatus, string> = {

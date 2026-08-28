@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { FiCheckSquare, FiGrid, FiUser, FiUsers, FiX } from 'react-icons/fi';
+import { FiCheckSquare, FiGrid, FiUser, FiUsers, FiFolder, FiX } from 'react-icons/fi';
 import type { IconType } from 'react-icons';
 import { cn } from '@/lib/cn';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,9 +13,21 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { label: 'Dashboard', to: '/dashboard', icon: FiGrid },
-  { label: 'Quản lý user', to: '/users', icon: FiUsers, roles: ['ADMIN'] },
-  { label: 'Hồ sơ', to: '/profile', icon: FiUser },
+  // LEAD routes
+  { label: 'Dashboard', to: '/leader/dashboard', icon: FiGrid, roles: ['LEAD'] },
+  { label: 'Dự án', to: '/leader/projects', icon: FiFolder, roles: ['LEAD'] },
+  { label: 'Quản lý user', to: '/leader/users', icon: FiUsers, roles: ['LEAD'] },
+  { label: 'Hồ sơ', to: '/leader/profile', icon: FiUser, roles: ['LEAD'] },
+
+  // BA routes
+  { label: 'Dashboard', to: '/ba/dashboard', icon: FiGrid, roles: ['BA'] },
+  { label: 'Dự án', to: '/ba/projects', icon: FiFolder, roles: ['BA'] },
+  { label: 'Hồ sơ', to: '/ba/profile', icon: FiUser, roles: ['BA'] },
+
+  // DEV routes
+  { label: 'Dashboard', to: '/dev/dashboard', icon: FiGrid, roles: ['USER'] },
+  { label: 'Dự án', to: '/dev/projects', icon: FiFolder, roles: ['USER'] },
+  { label: 'Hồ sơ', to: '/dev/profile', icon: FiUser, roles: ['USER'] },
 ];
 
 export function Sidebar({
@@ -64,8 +76,9 @@ export function Sidebar({
         <nav className="flex flex-col gap-1">
           {items.map((item) => (
             <NavLink
-              key={item.to}
+              key={`${item.to}-${item.label}`}
               to={item.to}
+              end
               onClick={onClose}
               className={({ isActive }) =>
                 cn(

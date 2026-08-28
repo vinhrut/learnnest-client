@@ -1,22 +1,43 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AuthLayout } from '@/components/layout/AuthLayout';
-import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage';
-import { LoginPage } from '@/features/auth/LoginPage';
-import { DashboardPage } from '@/features/dashboard/DashboardPage';
-import { ProfilePage } from '@/features/profile/ProfilePage';
-import { UserListPage } from '@/features/users/UserListPage';
-import { Forbidden, NotFound } from '@/pages/error/NotFound';
+import { RoleRoute } from './RoleRoute';
 import { GuestRoute } from './GuestRoute';
-import { ProtectedRoute } from './ProtectedRoute';
 import { RouteError } from './RouteError';
+import { NotFound } from '@/pages/error/NotFound';
+
+// Auth pages
+import { LoginPage } from '@/pages/auth/LoginPage';
+import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
+
+// Shared pages
+import { ProfilePage } from '@/pages/ba/ProfilePage';
+
+// Leader pages
+import { LeaderDashboardPage } from '@/pages/leader/DashboardPage';
+import { LeaderProjectPage } from '@/pages/leader/ProjectPage';
+import { LeaderProjectDetailPage } from '@/pages/leader/ProjectDetailPage';
+import { UserManagerPage } from '@/pages/leader/UserManagerPage';
+
+// BA pages
+import { BADashboardPage } from '@/pages/ba/DashboardPage';
+import { BAProjectPage } from '@/pages/ba/ProjectPage';
+
+// Dev pages
+import { DevDashboardPage } from '@/pages/dev/DashboardPage';
+import { DevProjectPage } from '@/pages/dev/ProjectPage';
 
 export const router = createBrowserRouter([
   {
     errorElement: <RouteError />,
     children: [
-      { path: '/', element: <Navigate to="/dashboard" replace /> },
+      // Root redirect based on role
+      {
+        path: '/',
+        element: <Navigate to="/leader/dashboard" replace />,
+      },
 
+      // Auth routes (guest only)
       {
         element: <GuestRoute />,
         children: [
@@ -39,30 +60,57 @@ export const router = createBrowserRouter([
         ],
       },
 
+      // ===== LEADER ROUTES =====
       {
-        element: <ProtectedRoute />,
+        element: (
+          <RoleRoute allowedRoles={['LEAD']}>
+            <AppLayout />
+          </RoleRoute>
+        ),
         children: [
-          {
-            element: <AppLayout />,
-            children: [
-              { path: '/dashboard', element: <DashboardPage /> },
-              { path: '/profile', element: <ProfilePage /> },
-            ],
-          },
+          { path: '/leader/dashboard', element: <LeaderDashboardPage /> },
+          { path: '/leader/projects', element: <LeaderProjectPage /> },
+          { path: '/leader/projects/:id', element: <LeaderProjectDetailPage /> },
+          { path: '/leader/users', element: <UserManagerPage /> },
+          { path: '/leader/profile', element: <ProfilePage /> },
         ],
       },
 
+      // ===== BA ROUTES =====
       {
-        element: <ProtectedRoute requiredRoles={['ADMIN']} />,
+        element: (
+          <RoleRoute allowedRoles={['BA']}>
+            <AppLayout />
+          </RoleRoute>
+        ),
         children: [
-          {
-            element: <AppLayout />,
-            children: [{ path: '/users', element: <UserListPage /> }],
-          },
+          { path: '/ba/dashboard', element: <BADashboardPage /> },
+          { path: '/ba/projects', element: <BAProjectPage /> },
+          { path: '/ba/profile', element: <ProfilePage /> },
         ],
       },
 
-      { path: '/403', element: <Forbidden /> },
+      // ===== DEV ROUTES =====
+      {
+        element: (
+          <RoleRoute allowedRoles={['USER']}>
+            <AppLayout />
+          </RoleRoute>
+        ),
+        children: [
+          { path: '/dev/dashboard', element: <DevDashboardPage /> },
+          { path: '/dev/projects', element: <DevProjectPage /> },
+          { path: '/dev/profile', element: <ProfilePage /> },
+        ],
+      },
+
+      // Legacy routes - redirect to role-based routes
+      { path: '/dashboard', element: <Navigate to="/leader/dashboard" replace /> },
+      { path: '/profile', element: <Navigate to="/leader/profile" replace /> },
+      { path: '/projects', element: <Navigate to="/leader/projects" replace /> },
+      { path: '/projects/:id', element: <Navigate to="/leader/projects/:id" replace /> },
+      { path: '/users', element: <Navigate to="/leader/users" replace /> },
+
       { path: '*', element: <NotFound /> },
     ],
   },
