@@ -1,5 +1,13 @@
 import { NavLink } from 'react-router-dom';
-import { FiCheckSquare, FiGrid, FiUser, FiUsers, FiX } from 'react-icons/fi';
+import {
+  FiCheckSquare,
+  FiGrid,
+  FiInbox,
+  FiSend,
+  FiUser,
+  FiUsers,
+  FiX,
+} from 'react-icons/fi';
 import type { IconType } from 'react-icons';
 import { cn } from '@/lib/cn';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,6 +23,8 @@ interface NavItem {
 const NAV: NavItem[] = [
   { label: 'Dashboard', to: '/dashboard', icon: FiGrid },
   { label: 'Quản lý user', to: '/users', icon: FiUsers, roles: ['ADMIN'] },
+  { label: 'Giao việc', to: '/tasks/assign', icon: FiSend, roles: ['ADMIN'] },
+  { label: 'Việc của tôi', to: '/my-tasks', icon: FiInbox },
   { label: 'Hồ sơ', to: '/profile', icon: FiUser },
 ];
 

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiCheckSquare, FiLogOut, FiMenu, FiUser } from 'react-icons/fi';
 import { Avatar } from '@/components/ui/Avatar';
+import { NotificationBell } from '@/features/notifications/NotificationBell';
 import { useAuth } from '@/hooks/useAuth';
 import { useLogoutMutation } from '@/hooks/queries/auth.queries';
 import { useMyProfileQuery } from '@/hooks/queries/profile.queries';
@@ -55,6 +56,8 @@ export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
         </span>
       </div>
 
+      <div className="flex items-center gap-1">
+      <NotificationBell />
       <div className="relative" ref={menuRef}>
         <button
           onClick={() => setOpen((v) => !v)}
@@ -105,6 +108,7 @@ export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
             </button>
           </div>
         )}
+      </div>
       </div>
     </header>
   );
