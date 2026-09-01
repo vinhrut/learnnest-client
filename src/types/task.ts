@@ -50,6 +50,27 @@ export interface TaskProject {
   code: string;
 }
 
+// Task Card (for vinh's task-vinh API)
+interface TaskPerson {
+  id: string;
+  full_name: string | null;
+  email: string;
+}
+
+export interface TaskCard {
+  id: string;
+  title: string;
+  description: string | null;
+  priority: TaskPriority;
+  status: TaskStatus;
+  assignmentStatus: string;
+  dueDate: string | null;
+  createdAt: string;
+  project: ProjectOption | null;
+  assignee: TaskPerson | null;
+  assigner: TaskPerson | null;
+}
+
 export interface CreateTaskRequest {
   title: string;
   description?: string;
@@ -95,13 +116,13 @@ export interface TaskFilters {
 
 // Status configs for UI
 export const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
-  DRAFT: 'Bản nháp',
+  DRAFT: 'Nháp',
   WAITING_APPROVAL: 'Chờ duyệt',
-  NEW: 'Cần làm',
+  NEW: 'Mới',
   DOING: 'Đang làm',
-  DONE: 'Đã xong',
-  CLOSED: 'Hoàn thành',
-  REJECTED: 'Từ chối',
+  DONE: 'Hoàn thành',
+  CLOSED: 'Đã đóng',
+  REJECTED: 'Bị từ chối',
 };
 
 // Kanban board mapping (FE UI states)
@@ -125,7 +146,7 @@ export const TASK_STATUS_CONFIG: Record<
   { label: string; color: string; bgColor: string }
 > = {
   DRAFT: {
-    label: 'Bản nháp',
+    label: 'Nháp',
     color: 'text-on-surface-variant',
     bgColor: 'bg-surface-variant',
   },
@@ -135,7 +156,7 @@ export const TASK_STATUS_CONFIG: Record<
     bgColor: 'bg-warning-soft',
   },
   NEW: {
-    label: 'Cần làm',
+    label: 'Mới',
     color: 'text-primary',
     bgColor: 'bg-primary-fixed',
   },
@@ -145,17 +166,17 @@ export const TASK_STATUS_CONFIG: Record<
     bgColor: 'bg-primary-container',
   },
   DONE: {
-    label: 'Đã xong',
+    label: 'Hoàn thành',
     color: 'text-success',
     bgColor: 'bg-success-soft',
   },
   CLOSED: {
-    label: 'Hoàn thành',
+    label: 'Đã đóng',
     color: 'text-success',
     bgColor: 'bg-success-container',
   },
   REJECTED: {
-    label: 'Từ chối',
+    label: 'Bị từ chối',
     color: 'text-danger',
     bgColor: 'bg-error-container',
   },
@@ -163,9 +184,9 @@ export const TASK_STATUS_CONFIG: Record<
 
 // Priority configs
 export const PRIORITY_LABEL: Record<TaskPriority, string> = {
-  HIGH: 'Cao',
-  MEDIUM: 'Trung bình',
   LOW: 'Thấp',
+  MEDIUM: 'Trung bình',
+  HIGH: 'Cao',
   URGENT: 'Khẩn cấp',
 };
 
@@ -244,3 +265,15 @@ export const APPROVAL_STATUS_CONFIG: Record<
     bgColor: 'bg-surface-variant',
   },
 };
+
+/** Payload backend đẩy qua socket event `notification` (namespace `/realtime`). */
+export interface RealtimeNotification {
+  id: string;
+  type: string;
+  title: string;
+  message: string | null;
+  taskId: string | null;
+  priority: TaskPriority | null;
+  dueDate: string | null;
+  createdAt: string;
+}

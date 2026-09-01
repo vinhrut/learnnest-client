@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 
@@ -8,6 +9,8 @@ import { Topbar } from './Topbar';
  */
 export function AppLayout() {
   const [navOpen, setNavOpen] = useState(false);
+
+  useRealtimeNotifications();
 
   return (
     <div className="min-h-screen bg-canvas">
