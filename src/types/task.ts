@@ -1,9 +1,12 @@
-export type TaskStatus = 'DRAFT' | 'TODO' | 'IN_PROGRESS' | 'DONE';
+// Map BE enum to FE (for UI display)
+export type TaskStatus = 'DRAFT' | 'WAITING_APPROVAL' | 'NEW' | 'DOING' | 'DONE' | 'CLOSED' | 'REJECTED';
+export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+export type ApprovalStatus = 'NOT_ASSIGNED' | 'WAITING_APPROVAL' | 'APPROVED' | 'ASSIGNED' | 'REJECTED' | 'CANCELLED';
 
-export type TaskPriority = 'HIGH' | 'MEDIUM' | 'LOW';
-
-/** Approval status for task workflow */
-export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+// Map to BE enum
+export type TaskStatusBE = 'DRAFT' | 'WAITING_APPROVAL' | 'NEW' | 'DOING' | 'DONE' | 'CLOSED' | 'REJECTED';
+export type TaskPriorityBE = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+export type ApprovalStatusBE = 'NOT_ASSIGNED' | 'WAITING_APPROVAL' | 'APPROVED' | 'ASSIGNED' | 'REJECTED' | 'CANCELLED';
 
 export interface Task {
   id: string;
@@ -12,19 +15,16 @@ export interface Task {
   description: string | null;
   status: TaskStatus;
   priority: TaskPriority;
-  approval_status: ApprovalStatus;
+  assignment_status: ApprovalStatus;
   project_id: string;
-  assignee_id: string;
+  assignee_id: string | null;
   creator_id: string;
   due_date: string | null;
   created_at: string;
   updated_at: string;
-  completed_at: string | null;
   assignee?: TaskAssignee;
   creator?: TaskCreator;
   project?: TaskProject;
-  subtasks?: SubTask[];
-  comments?: Comment[];
   rejection_reason?: string | null;
 }
 
@@ -50,35 +50,10 @@ export interface TaskProject {
   code: string;
 }
 
-export interface SubTask {
-  id: string;
-  task_id: string;
-  title: string;
-  completed: boolean;
-  created_at: string;
-}
-
-export interface Comment {
-  id: string;
-  task_id: string;
-  user_id: string;
-  content: string;
-  created_at: string;
-  user: CommentUser;
-}
-
-export interface CommentUser {
-  id: string;
-  username: string;
-  full_name: string | null;
-  avatar_url: string | null;
-}
-
 export interface CreateTaskRequest {
   title: string;
   description?: string;
-  status?: TaskStatus;
-  priority?: TaskPriority;
+  priority?: TaskPriorityBE;
   project_id?: string;
   assignee_id?: string;
   due_date?: string;
@@ -87,10 +62,13 @@ export interface CreateTaskRequest {
 export interface UpdateTaskRequest {
   title?: string;
   description?: string;
-  status?: TaskStatus;
-  priority?: TaskPriority;
+  priority?: TaskPriorityBE;
   assignee_id?: string;
   due_date?: string;
+}
+
+export interface UpdateTaskStatusRequest {
+  status: TaskStatusBE;
 }
 
 export interface SubmitTaskRequest {
@@ -103,24 +81,43 @@ export interface ApproveTaskRequest {
 
 export interface RejectTaskRequest {
   task_id: string;
-  reason: string;
+  reason?: string;
 }
 
 // Query params for task list
 export interface TaskFilters {
   project_id?: string;
   assignee_id?: string;
-  status?: TaskStatus;
-  approval_status?: ApprovalStatus;
+  status?: TaskStatusBE;
+  approval_status?: ApprovalStatusBE;
   search?: string;
 }
 
-// Status configs
+// Status configs for UI
 export const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
   DRAFT: 'Bản nháp',
-  TODO: 'Cần làm',
-  IN_PROGRESS: 'Đang làm',
+  WAITING_APPROVAL: 'Chờ duyệt',
+  NEW: 'Cần làm',
+  DOING: 'Đang làm',
   DONE: 'Đã xong',
+  CLOSED: 'Hoàn thành',
+  REJECTED: 'Từ chối',
+};
+
+// Kanban board mapping (FE UI states)
+export const KANBAN_BOARD_STATUS: Record<string, TaskStatus> = {
+  TODO: 'NEW',
+  IN_PROGRESS: 'DOING',
+};
+
+export const KANBAN_BOARD_STATUS_REVERSE: Record<TaskStatus, string> = {
+  NEW: 'TODO',
+  DOING: 'IN_PROGRESS',
+  DRAFT: 'DRAFT',
+  WAITING_APPROVAL: 'WAITING_APPROVAL',
+  DONE: 'DONE',
+  CLOSED: 'CLOSED',
+  REJECTED: 'REJECTED',
 };
 
 export const TASK_STATUS_CONFIG: Record<
@@ -132,20 +129,35 @@ export const TASK_STATUS_CONFIG: Record<
     color: 'text-on-surface-variant',
     bgColor: 'bg-surface-variant',
   },
-  TODO: {
-    label: 'Cần làm',
-    color: 'text-on-surface-variant',
-    bgColor: 'bg-surface-variant',
+  WAITING_APPROVAL: {
+    label: 'Chờ duyệt',
+    color: 'text-warning',
+    bgColor: 'bg-warning-soft',
   },
-  IN_PROGRESS: {
-    label: 'Đang làm',
+  NEW: {
+    label: 'Cần làm',
     color: 'text-primary',
     bgColor: 'bg-primary-fixed',
+  },
+  DOING: {
+    label: 'Đang làm',
+    color: 'text-primary',
+    bgColor: 'bg-primary-container',
   },
   DONE: {
     label: 'Đã xong',
     color: 'text-success',
     bgColor: 'bg-success-soft',
+  },
+  CLOSED: {
+    label: 'Hoàn thành',
+    color: 'text-success',
+    bgColor: 'bg-success-container',
+  },
+  REJECTED: {
+    label: 'Từ chối',
+    color: 'text-danger',
+    bgColor: 'bg-error-container',
   },
 };
 
@@ -154,6 +166,7 @@ export const PRIORITY_LABEL: Record<TaskPriority, string> = {
   HIGH: 'Cao',
   MEDIUM: 'Trung bình',
   LOW: 'Thấp',
+  URGENT: 'Khẩn cấp',
 };
 
 export const PRIORITY_CONFIG: Record<
@@ -169,7 +182,7 @@ export const PRIORITY_CONFIG: Record<
   MEDIUM: {
     label: 'Trung bình',
     color: 'text-warning',
-    bgColor: 'bg-tertiary-fixed',
+    bgColor: 'bg-warning-soft',
     icon: 'drag_handle',
   },
   LOW: {
@@ -178,20 +191,34 @@ export const PRIORITY_CONFIG: Record<
     bgColor: 'bg-surface-container-high',
     icon: 'keyboard_arrow_down',
   },
+  URGENT: {
+    label: 'Khẩn cấp',
+    color: 'text-danger',
+    bgColor: 'bg-error',
+    icon: 'priority_high',
+  },
 };
 
 // Approval status configs
 export const APPROVAL_STATUS_LABEL: Record<ApprovalStatus, string> = {
-  PENDING: 'Chờ duyệt',
+  NOT_ASSIGNED: 'Chưa giao',
+  WAITING_APPROVAL: 'Chờ duyệt',
   APPROVED: 'Đã duyệt',
+  ASSIGNED: 'Đã giao',
   REJECTED: 'Từ chối',
+  CANCELLED: 'Đã hủy',
 };
 
 export const APPROVAL_STATUS_CONFIG: Record<
   ApprovalStatus,
   { label: string; color: string; bgColor: string }
 > = {
-  PENDING: {
+  NOT_ASSIGNED: {
+    label: 'Chưa giao',
+    color: 'text-on-surface-variant',
+    bgColor: 'bg-surface-variant',
+  },
+  WAITING_APPROVAL: {
     label: 'Chờ duyệt',
     color: 'text-warning',
     bgColor: 'bg-warning-soft',
@@ -201,9 +228,19 @@ export const APPROVAL_STATUS_CONFIG: Record<
     color: 'text-success',
     bgColor: 'bg-success-soft',
   },
+  ASSIGNED: {
+    label: 'Đã giao',
+    color: 'text-primary',
+    bgColor: 'bg-primary-container',
+  },
   REJECTED: {
     label: 'Từ chối',
     color: 'text-danger',
     bgColor: 'bg-error-container',
+  },
+  CANCELLED: {
+    label: 'Đã hủy',
+    color: 'text-on-surface-variant',
+    bgColor: 'bg-surface-variant',
   },
 };

@@ -1,60 +1,12 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { KanbanBoard, TaskDetailDrawer, TaskForm } from '@/components/feature/task';
-import { useTasksQuery, useCreateTask } from '@/hooks/tasks/task.queries';
+import { useTasksByProjectQuery, useCreateTask, useUpdateTask, useUpdateTaskStatus } from '@/hooks/tasks/task.queries';
+import { toast } from '@/components/ui/toast/toast.store';
 import type { Task } from '@/types/task';
 
-// Mock tasks for DEV
-const MOCK_TASKS: Task[] = [
-  {
-    id: '1',
-    code: 'TSK-2001',
-    title: 'Fix bug login Google trên Safari',
-    description: 'Người dùng không thể đăng nhập bằng Google trên trình duyệt Safari',
-    status: 'IN_PROGRESS',
-    priority: 'HIGH',
-    approval_status: 'APPROVED',
-    project_id: 'p1',
-    assignee_id: 'u1',
-    creator_id: 'u1',
-    due_date: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    completed_at: null,
-  },
-  {
-    id: '2',
-    code: 'TSK-2002',
-    title: 'Tối ưu database query',
-    description: 'Cải thiện performance của các truy vấn database',
-    status: 'TODO',
-    priority: 'MEDIUM',
-    approval_status: 'PENDING',
-    project_id: 'p1',
-    assignee_id: 'u1',
-    creator_id: 'u1',
-    due_date: new Date(Date.now() + 86400000).toISOString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    completed_at: null,
-  },
-  {
-    id: '3',
-    code: 'TSK-2003',
-    title: 'Refactor API authentication',
-    description: 'Tái cấu trúc module authentication',
-    status: 'DONE',
-    priority: 'LOW',
-    approval_status: 'APPROVED',
-    project_id: 'p1',
-    assignee_id: 'u1',
-    creator_id: 'u1',
-    due_date: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    completed_at: new Date().toISOString(),
-  },
-];
+// Demo project ID
+const DEMO_PROJECT_ID = '00000000-0000-0000-0000-000000000001';
 
 export function DevTaskPage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -62,12 +14,12 @@ export function DevTaskPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  // Try to use real API data, fallback to mock
-  const { data: tasksData, isLoading, refetch, isError } = useTasksQuery();
+  const { data: tasksData, isLoading, refetch } = useTasksByProjectQuery(DEMO_PROJECT_ID);
   const createTask = useCreateTask();
+  const updateTask = useUpdateTask();
+  const updateTaskStatus = useUpdateTaskStatus();
 
-  // Use API tasks if available, otherwise use mock
-  const displayTasks = isError ? MOCK_TASKS : (tasksData?.data ?? MOCK_TASKS);
+  const displayTasks = tasksData ?? [];
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
@@ -84,13 +36,43 @@ export function DevTaskPage() {
     setFormOpen(true);
   };
 
-  const handleFormSubmit = (data: any) => {
-    createTask.mutate(data, {
-      onSuccess: () => {
-        setFormOpen(false);
-        refetch();
-      },
-    });
+  const handleFormSubmit = (data: import("@/types/task").CreateTaskRequest | import("@/types/task").UpdateTaskRequest) => {
+    if (editingTask) {
+      updateTask.mutate(
+        { id: editingTask.id, payload: data },
+        {
+          onSuccess: () => {
+            setFormOpen(false);
+            refetch();
+          },
+        }
+      );
+    } else {
+      createTask.mutate(
+        { projectId: DEMO_PROJECT_ID, payload: data as import("@/types/task").CreateTaskRequest },
+        {
+          onSuccess: () => {
+            setFormOpen(false);
+            refetch();
+          },
+        }
+      );
+    }
+  };
+
+  // Handle drag & drop
+  const handleTaskMove = (taskId: string, newStatus: import("@/types/task").TaskStatus) => {
+    updateTaskStatus.mutate(
+      { id: taskId, payload: { status: newStatus } },
+      {
+        onSuccess: () => {
+          refetch();
+        },
+        onError: (error: { response?: { data?: { message?: string } } }) => {
+          toast.error(error?.response?.data?.message || 'Không thể thay đổi trạng thái');
+        },
+      }
+    );
   };
 
   const handleRefresh = () => {
@@ -117,7 +99,6 @@ export function DevTaskPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Create Task Button */}
             <Button onClick={handleCreateTask} leftIcon="add">
               Tạo công việc
             </Button>
@@ -130,7 +111,8 @@ export function DevTaskPage() {
         <KanbanBoard
           tasks={displayTasks}
           onTaskClick={handleTaskClick}
-          loading={isLoading && !isError}
+          onTaskMove={handleTaskMove}
+          loading={isLoading}
         />
       </div>
 
@@ -149,7 +131,7 @@ export function DevTaskPage() {
         onClose={() => setFormOpen(false)}
         onSubmit={handleFormSubmit}
         task={editingTask ?? undefined}
-        loading={createTask.isPending}
+        loading={createTask.isPending || updateTask.isPending}
       />
     </div>
   );

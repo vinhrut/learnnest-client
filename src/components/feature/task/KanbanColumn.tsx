@@ -18,22 +18,37 @@ const STATUS_STYLES: Record<TaskStatus, { container: string; header: string; hea
   DRAFT: {
     container: 'bg-surface-container-lowest',
     header: 'bg-surface-container',
-    headerText: 'text-on-surface',
+    headerText: 'text-on-surface-variant',
   },
-  TODO: {
+  WAITING_APPROVAL: {
     container: 'bg-surface-container-lowest',
-    header: 'bg-surface-container',
-    headerText: 'text-on-surface',
+    header: 'bg-warning-soft',
+    headerText: 'text-warning',
   },
-  IN_PROGRESS: {
+  NEW: {
     container: 'bg-surface-container-lowest',
     header: 'bg-primary-fixed',
     headerText: 'text-on-primary-fixed',
   },
+  DOING: {
+    container: 'bg-surface-container-lowest',
+    header: 'bg-primary-container',
+    headerText: 'text-on-primary-container',
+  },
   DONE: {
     container: 'bg-surface-container-lowest opacity-80',
-    header: 'bg-surface-container-low',
-    headerText: 'text-on-surface-variant',
+    header: 'bg-success-soft',
+    headerText: 'text-success',
+  },
+  CLOSED: {
+    container: 'bg-surface-container-lowest opacity-60',
+    header: 'bg-success-container',
+    headerText: 'text-success',
+  },
+  REJECTED: {
+    container: 'bg-surface-container-lowest opacity-80',
+    header: 'bg-error-container',
+    headerText: 'text-error',
   },
 };
 
@@ -50,7 +65,7 @@ export function KanbanColumn({
     id: status,
   });
 
-  const styles = STATUS_STYLES[status];
+  const styles = STATUS_STYLES[status] || STATUS_STYLES.DRAFT;
 
   return (
     <div
@@ -75,7 +90,7 @@ export function KanbanColumn({
           {title}
           <span className={cn(
             'rounded-full px-2 py-0.5 text-[10px]',
-            status === 'IN_PROGRESS' ? 'bg-primary-container text-on-primary' : 'bg-surface-variant text-on-surface-variant'
+            status === 'DOING' ? 'bg-primary-container text-on-primary' : 'bg-surface-variant text-on-surface-variant'
           )}>
             {count}
           </span>
@@ -84,11 +99,17 @@ export function KanbanColumn({
           {isProtected && (
             <span className="material-symbols-outlined text-xl text-on-surface-variant cursor-help" title="Manager only">shield</span>
           )}
-          {status === 'IN_PROGRESS' && (
+          {status === 'DOING' && (
             <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
           )}
           {status === 'DONE' && (
-            <span className="material-symbols-outlined text-xl text-on-surface-variant">check_circle</span>
+            <span className="material-symbols-outlined text-xl text-success">check_circle</span>
+          )}
+          {status === 'CLOSED' && (
+            <span className="material-symbols-outlined text-xl text-success">verified</span>
+          )}
+          {status === 'REJECTED' && (
+            <span className="material-symbols-outlined text-xl text-error">cancel</span>
           )}
         </div>
       </div>
@@ -109,7 +130,7 @@ export function KanbanColumn({
                   key={task.id}
                   task={task}
                   onClick={() => onTaskClick?.(task)}
-                  isActive={status === 'IN_PROGRESS'}
+                  isActive={status === 'DOING'}
                 />
               ))}
             </div>

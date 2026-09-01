@@ -2,7 +2,6 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { RoleRoute } from './RoleRoute';
-import { GuestRoute } from './GuestRoute';
 import { RouteError } from './RouteError';
 import { NotFound } from '@/pages/error/NotFound';
 
@@ -40,27 +39,22 @@ export const router = createBrowserRouter([
         element: <Navigate to="/leader/dashboard" replace />,
       },
 
-      // Auth routes (guest only)
+      // Auth routes
       {
-        element: <GuestRoute />,
-        children: [
-          {
-            path: '/login',
-            element: (
-              <AuthLayout>
-                <LoginPage />
-              </AuthLayout>
-            ),
-          },
-          {
-            path: '/forgot-password',
-            element: (
-              <AuthLayout>
-                <ForgotPasswordPage />
-              </AuthLayout>
-            ),
-          },
-        ],
+        path: '/login',
+        element: (
+          <AuthLayout>
+            <LoginPage />
+          </AuthLayout>
+        ),
+      },
+      {
+        path: '/forgot-password',
+        element: (
+          <AuthLayout>
+            <ForgotPasswordPage />
+          </AuthLayout>
+        ),
       },
 
       // ===== LEADER ROUTES =====

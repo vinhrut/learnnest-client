@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -11,15 +11,10 @@ import {
   type DragEndEvent,
   type DragOverEvent,
 } from '@dnd-kit/core';
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { KanbanColumn } from './KanbanColumn';
 import { TaskCard } from './TaskCard';
 import type { Task, TaskStatus } from '@/types/task';
-import { TASK_STATUS_LABEL } from '@/types/task';
 
 interface KanbanBoardProps {
   tasks: Task[];
@@ -28,19 +23,21 @@ interface KanbanBoardProps {
   loading?: boolean;
 }
 
-const COLUMNS: { status: TaskStatus; isProtected?: boolean }[] = [
-  { status: 'DRAFT', isProtected: true },
-  { status: 'TODO' },
-  { status: 'IN_PROGRESS' },
-  { status: 'DONE' },
+// Kanban columns - map to BE statuses
+const KANBAN_COLUMNS: { status: TaskStatus; label: string; isProtected?: boolean }[] = [
+  { status: 'DRAFT', label: 'Bản nháp', isProtected: true },
+  { status: 'WAITING_APPROVAL', label: 'Chờ duyệt', isProtected: true },
+  { status: 'NEW', label: 'Cần làm' },
+  { status: 'DOING', label: 'Đang làm' },
+  { status: 'DONE', label: 'Đã xong' },
 ];
 
 export function KanbanBoard({ tasks, onTaskClick, onTaskMove, loading }: KanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [localTasks, setLocalTasks] = useState<Task[]>(tasks);
 
-  // Update local tasks when props change
-  useMemo(() => {
+  // Sync local tasks when props change
+  useEffect(() => {
     setLocalTasks(tasks);
   }, [tasks]);
 
@@ -78,16 +75,16 @@ export function KanbanBoard({ tasks, onTaskClick, onTaskMove, loading }: KanbanB
     const overId = over.id as string;
 
     // Find the containers
-    const activeTask = findTaskById(activeId);
-    if (!activeTask) return;
+    const draggedTask = findTaskById(activeId);
+    if (!draggedTask) return;
 
     // Check if over is a column (status)
-    const overStatus = COLUMNS.find((col) => col.status === overId)?.status;
-    if (overStatus && activeTask.status !== overStatus) {
-      // Move task to new column (optimistic update)
+    const overColumn = KANBAN_COLUMNS.find((col) => col.status === overId);
+    if (overColumn && draggedTask.status !== overColumn.status) {
+      // Move task to new column (optimistic update for visual feedback)
       setLocalTasks((prev) =>
         prev.map((task) =>
-          task.id === activeId ? { ...task, status: overStatus } : task
+          task.id === activeId ? { ...task, status: overColumn.status } : task
         )
       );
     }
@@ -105,10 +102,11 @@ export function KanbanBoard({ tasks, onTaskClick, onTaskMove, loading }: KanbanB
     const draggedTask = findTaskById(activeId);
     if (!draggedTask) return;
 
-    // Check if dropped on a column
-    const newStatus = COLUMNS.find((col) => col.status === overId)?.status;
-    if (newStatus && draggedTask.status !== newStatus) {
-      onTaskMove?.(activeId, newStatus);
+    // Check if dropped on a column - get the new status
+    const newColumn = KANBAN_COLUMNS.find((col) => col.status === overId);
+    if (newColumn && draggedTask.status !== newColumn.status) {
+      // Call API to update status - backend validates transition
+      onTaskMove?.(activeId, newColumn.status);
     }
   };
 
@@ -121,12 +119,12 @@ export function KanbanBoard({ tasks, onTaskClick, onTaskMove, loading }: KanbanB
       onDragEnd={handleDragEnd}
     >
       <div className="flex h-full gap-4 overflow-x-auto pb-4">
-        {COLUMNS.map((column) => {
+        {KANBAN_COLUMNS.map((column) => {
           const columnTasks = getTasksByStatus(column.status);
           return (
             <KanbanColumn
               key={column.status}
-              title={TASK_STATUS_LABEL[column.status]}
+              title={column.label}
               tasks={columnTasks}
               count={columnTasks.length}
               status={column.status}

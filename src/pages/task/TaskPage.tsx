@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { KanbanBoard, TaskDetailDrawer, TaskForm } from '@/components/feature/task';
-import { useTasksQuery, useCreateTask, useUpdateTask } from '@/hooks/tasks/task.queries';
-import type { Task } from '@/types/task';
+import { useTasksByProjectQuery, useCreateTask, useUpdateTask, useUpdateTaskStatus } from '@/hooks/tasks/task.queries';
+import { toast } from '@/components/ui/toast/toast.store';
+import type { Task, TaskStatus } from '@/types/task';
+
+// Demo project ID - in real app, this would come from URL or context
+const DEMO_PROJECT_ID = '00000000-0000-0000-0000-000000000001';
 
 export function TaskPage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -11,12 +15,13 @@ export function TaskPage() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   // Use real API data when backend is ready
-  const { data: tasksData, isLoading, refetch } = useTasksQuery();
+  const { data: tasksData, isLoading, refetch } = useTasksByProjectQuery(DEMO_PROJECT_ID);
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
+  const updateTaskStatus = useUpdateTaskStatus();
 
   // Use API tasks if available, otherwise empty
-  const displayTasks = tasksData?.data ?? [];
+  const displayTasks = tasksData ?? [];
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
@@ -33,7 +38,7 @@ export function TaskPage() {
     setFormOpen(true);
   };
 
-  const handleFormSubmit = (data: any) => {
+  const handleFormSubmit = (data: import("@/types/task").CreateTaskRequest | import("@/types/task").UpdateTaskRequest) => {
     if (editingTask) {
       updateTask.mutate(
         { id: editingTask.id, payload: data },
@@ -45,13 +50,31 @@ export function TaskPage() {
         }
       );
     } else {
-      createTask.mutate(data, {
+      createTask.mutate(
+        { projectId: DEMO_PROJECT_ID, payload: data as import("@/types/task").CreateTaskRequest },
+        {
+          onSuccess: () => {
+            setFormOpen(false);
+            refetch();
+          },
+        }
+      );
+    }
+  };
+
+  // Handle drag & drop - call API to update status
+  const handleTaskMove = (taskId: string, newStatus: TaskStatus) => {
+    updateTaskStatus.mutate(
+      { id: taskId, payload: { status: newStatus } },
+      {
         onSuccess: () => {
-          setFormOpen(false);
           refetch();
         },
-      });
-    }
+        onError: (error: { response?: { data?: { message?: string } } }) => {
+          toast.error(error?.response?.data?.message || 'Không thể thay đổi trạng thái');
+        },
+      }
+    );
   };
 
   const handleRefresh = () => {
@@ -92,6 +115,7 @@ export function TaskPage() {
         <KanbanBoard
           tasks={displayTasks}
           onTaskClick={handleTaskClick}
+          onTaskMove={handleTaskMove}
           loading={isLoading}
         />
       </div>

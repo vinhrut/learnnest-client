@@ -48,6 +48,8 @@ export function TaskCard({
         isDragging && 'opacity-90 scale-[1.02] shadow-lg',
         isSortableDragging && 'opacity-50',
         task.status === 'DONE' && 'opacity-70',
+        task.status === 'CLOSED' && 'opacity-60',
+        task.status === 'REJECTED' && 'opacity-75',
       )}
     >
       {/* Edit button (hover) */}
@@ -75,27 +77,31 @@ export function TaskCard({
       <h4
         className={cn(
           'mb-3 pr-6 text-body-md font-medium',
-          task.status === 'DONE' ? 'text-on-surface-variant line-through' : 'text-on-surface',
+          task.status === 'DONE' || task.status === 'CLOSED' ? 'text-on-surface-variant line-through' : 'text-on-surface',
         )}
       >
         {task.title}
       </h4>
 
-      {/* Approval Status */}
-      {task.approval_status !== 'APPROVED' && (
+      {/* Assignment Status (only show if not approved/assigned) */}
+      {task.assignment_status && task.assignment_status !== 'APPROVED' && task.assignment_status !== 'ASSIGNED' && (
         <div className="mb-3">
           <span
             className={cn(
               'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-label-md font-semibold',
-              task.approval_status === 'PENDING'
+              task.assignment_status === 'WAITING_APPROVAL'
                 ? 'bg-warning-soft text-warning'
-                : 'bg-error-container text-error',
+                : task.assignment_status === 'REJECTED'
+                  ? 'bg-error-container text-error'
+                  : 'bg-surface-variant text-on-surface-variant',
             )}
           >
             <span className="material-symbols-outlined text-base">
-              {task.approval_status === 'PENDING' ? 'schedule' : 'close'}
+              {task.assignment_status === 'WAITING_APPROVAL' ? 'schedule' : 'close'}
             </span>
-            {task.approval_status === 'PENDING' ? 'Chờ duyệt' : 'Từ chối'}
+            {task.assignment_status === 'WAITING_APPROVAL' ? 'Chờ duyệt' :
+             task.assignment_status === 'REJECTED' ? 'Từ chối' :
+             task.assignment_status === 'NOT_ASSIGNED' ? 'Chưa giao' : 'Đã hủy'}
           </span>
         </div>
       )}

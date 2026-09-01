@@ -2,12 +2,22 @@ import { cn } from '@/lib/cn';
 import { Avatar } from '@/components/ui/Avatar';
 import type { Task } from '@/types/task';
 
-interface AlertItemProps {
+export interface AlertItemProps {
   task: Task;
   dueType: 'today' | 'tomorrow';
   onClick?: () => void;
 }
 
+/**
+ * AlertItem - Single alert item for tasks due soon
+ *
+ * @example
+ * <AlertItem
+ *   task={task}
+ *   dueType="today"
+ *   onClick={() => openTask(task.id)}
+ * />
+ */
 export function AlertItem({ task, dueType, onClick }: AlertItemProps) {
   const dueTime = task.due_date
     ? new Date(task.due_date).toLocaleTimeString('vi-VN', {
@@ -20,14 +30,13 @@ export function AlertItem({ task, dueType, onClick }: AlertItemProps) {
     <div
       onClick={onClick}
       className={cn(
-        'group cursor-pointer p-4 transition-colors hover:bg-surface-container-low',
-        'border-b border-outline-variant',
+        'group cursor-pointer border-b border-outline-variant p-4 transition-colors hover:bg-surface-container-low',
         'border-l-2',
         dueType === 'today' ? 'border-l-error' : 'border-l-warning',
       )}
     >
       <div className="mb-1 flex items-start justify-between">
-        <span className="font-mono text-label-md text-on-surface-variant">{task.code}</span>
+        <span className="font-mono-sm text-mono-sm text-on-surface-variant">{task.code}</span>
         <span
           className={cn(
             'font-label-md text-[10px] font-bold uppercase tracking-wider',

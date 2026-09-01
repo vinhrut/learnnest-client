@@ -8,7 +8,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMyProfileQuery } from '@/hooks/profile/profile.queries';
 import { ProfileInfoCard } from '@/components/feature/profile/ProfileInfoCard';
 import type { Task } from '@/types/task';
-import { FiCheckCircle, FiClock, FiList } from 'react-icons/fi';
 
 // Mock tasks for AlertList demo
 const MOCK_TASKS: Task[] = [
@@ -17,16 +16,15 @@ const MOCK_TASKS: Task[] = [
     code: 'TSK-1001',
     title: 'Hoàn thiện tài liệu dự án Q3',
     description: '',
-    status: 'TODO',
+    status: 'NEW',
     priority: 'HIGH',
-    approval_status: 'PENDING',
+    assignment_status: 'APPROVED',
     project_id: 'p1',
     assignee_id: 'u1',
     creator_id: 'u1',
     due_date: new Date().toISOString(),
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    completed_at: null,
     assignee: {
       id: 'u1',
       username: 'user1',
@@ -40,16 +38,15 @@ const MOCK_TASKS: Task[] = [
     code: 'TSK-1002',
     title: 'Review thiết kế UI mới',
     description: '',
-    status: 'IN_PROGRESS',
+    status: 'DOING',
     priority: 'MEDIUM',
-    approval_status: 'APPROVED',
+    assignment_status: 'APPROVED',
     project_id: 'p1',
     assignee_id: 'u2',
     creator_id: 'u1',
     due_date: new Date(Date.now() + 3600000 * 3).toISOString(),
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    completed_at: null,
     assignee: {
       id: 'u2',
       username: 'user2',
@@ -82,25 +79,21 @@ export function BADashboardPage() {
         <StatCard
           label="Công việc của tôi"
           value={12}
-          icon={FiList}
           tone="primary"
         />
         <StatCard
           label="Đang làm"
           value={5}
-          icon={FiClock}
           tone="warning"
         />
         <StatCard
           label="Hoàn thành"
           value={7}
-          icon={FiCheckCircle}
           tone="success"
         />
         <StatCard
           label="Quá hạn"
           value={0}
-          icon={FiClock}
           tone="danger"
         />
       </div>

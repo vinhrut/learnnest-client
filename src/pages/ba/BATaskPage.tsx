@@ -1,60 +1,12 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { KanbanBoard, TaskDetailDrawer, TaskForm } from '@/components/feature/task';
-import { useTasksQuery, useCreateTask } from '@/hooks/tasks/task.queries';
+import { useTasksByProjectQuery, useCreateTask, useUpdateTask, useUpdateTaskStatus } from '@/hooks/tasks/task.queries';
+import { toast } from '@/components/ui/toast/toast.store';
 import type { Task } from '@/types/task';
 
-// Mock tasks for BA
-const MOCK_TASKS: Task[] = [
-  {
-    id: '1',
-    code: 'TSK-1001',
-    title: 'Phân tích yêu cầu dự án CRM',
-    description: 'Thu thập và phân tích yêu cầu từ khách hàng',
-    status: 'TODO',
-    priority: 'HIGH',
-    approval_status: 'PENDING',
-    project_id: 'p1',
-    assignee_id: 'u1',
-    creator_id: 'u1',
-    due_date: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    completed_at: null,
-  },
-  {
-    id: '2',
-    code: 'TSK-1002',
-    title: 'Viết tài liệu specification',
-    description: 'Viết tài liệu spec chi tiết cho module',
-    status: 'IN_PROGRESS',
-    priority: 'MEDIUM',
-    approval_status: 'APPROVED',
-    project_id: 'p1',
-    assignee_id: 'u1',
-    creator_id: 'u1',
-    due_date: new Date(Date.now() + 86400000).toISOString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    completed_at: null,
-  },
-  {
-    id: '3',
-    code: 'TSK-1003',
-    title: 'Review thiết kế database',
-    description: 'Review schema database mới',
-    status: 'DONE',
-    priority: 'MEDIUM',
-    approval_status: 'APPROVED',
-    project_id: 'p1',
-    assignee_id: 'u1',
-    creator_id: 'u1',
-    due_date: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    completed_at: new Date().toISOString(),
-  },
-];
+// Demo project ID
+const DEMO_PROJECT_ID = '00000000-0000-0000-0000-000000000001';
 
 export function BATaskPage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -62,12 +14,12 @@ export function BATaskPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  // Try to use real API data, fallback to mock
-  const { data: tasksData, isLoading, refetch, isError } = useTasksQuery();
+  const { data: tasksData, isLoading, refetch } = useTasksByProjectQuery(DEMO_PROJECT_ID);
   const createTask = useCreateTask();
+  const updateTask = useUpdateTask();
+  const updateTaskStatus = useUpdateTaskStatus();
 
-  // Use API tasks if available, otherwise use mock
-  const displayTasks = isError ? MOCK_TASKS : (tasksData?.data ?? MOCK_TASKS);
+  const displayTasks = tasksData ?? [];
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
@@ -84,13 +36,43 @@ export function BATaskPage() {
     setFormOpen(true);
   };
 
-  const handleFormSubmit = (data: any) => {
-    createTask.mutate(data, {
-      onSuccess: () => {
-        setFormOpen(false);
-        refetch();
-      },
-    });
+  const handleFormSubmit = (data: import("@/types/task").CreateTaskRequest | import("@/types/task").UpdateTaskRequest) => {
+    if (editingTask) {
+      updateTask.mutate(
+        { id: editingTask.id, payload: data },
+        {
+          onSuccess: () => {
+            setFormOpen(false);
+            refetch();
+          },
+        }
+      );
+    } else {
+      createTask.mutate(
+        { projectId: DEMO_PROJECT_ID, payload: data as import("@/types/task").CreateTaskRequest },
+        {
+          onSuccess: () => {
+            setFormOpen(false);
+            refetch();
+          },
+        }
+      );
+    }
+  };
+
+  // Handle drag & drop
+  const handleTaskMove = (taskId: string, newStatus: import("@/types/task").TaskStatus) => {
+    updateTaskStatus.mutate(
+      { id: taskId, payload: { status: newStatus } },
+      {
+        onSuccess: () => {
+          refetch();
+        },
+        onError: (error: { response?: { data?: { message?: string } } }) => {
+          toast.error(error?.response?.data?.message || 'Không thể thay đổi trạng thái');
+        },
+      }
+    );
   };
 
   const handleRefresh = () => {
@@ -117,7 +99,6 @@ export function BATaskPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Create Task Button */}
             <Button onClick={handleCreateTask} leftIcon="add">
               Tạo công việc
             </Button>
@@ -130,7 +111,8 @@ export function BATaskPage() {
         <KanbanBoard
           tasks={displayTasks}
           onTaskClick={handleTaskClick}
-          loading={isLoading && !isError}
+          onTaskMove={handleTaskMove}
+          loading={isLoading}
         />
       </div>
 
@@ -149,7 +131,7 @@ export function BATaskPage() {
         onClose={() => setFormOpen(false)}
         onSubmit={handleFormSubmit}
         task={editingTask ?? undefined}
-        loading={createTask.isPending}
+        loading={createTask.isPending || updateTask.isPending}
       />
     </div>
   );

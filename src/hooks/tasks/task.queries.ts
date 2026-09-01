@@ -8,6 +8,7 @@ import { taskApi } from '@/api/task.api';
 import type {
   CreateTaskRequest,
   UpdateTaskRequest,
+  UpdateTaskStatusRequest,
   TaskFilters,
   SubmitTaskRequest,
   ApproveTaskRequest,
@@ -55,7 +56,8 @@ function useInvalidateTasks() {
 export function useCreateTask() {
   const invalidate = useInvalidateTasks();
   return useMutation({
-    mutationFn: (payload: CreateTaskRequest) => taskApi.createTask(payload),
+    mutationFn: ({ projectId, payload }: { projectId: string; payload: CreateTaskRequest }) =>
+      taskApi.createTask(projectId, payload),
     onSuccess: () => {
       invalidate();
       toast.success('Tạo công việc thành công');
@@ -82,6 +84,21 @@ export function useUpdateTask() {
   });
 }
 
+export function useUpdateTaskStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateTaskStatusRequest }) =>
+      taskApi.updateTaskStatus(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      toast.success('Cập nhật trạng thái thành công');
+    },
+    onError: (error: { response?: { data?: { message?: string } } }) => {
+      toast.error(error?.response?.data?.message || 'Cập nhật trạng thái thất bại');
+    },
+  });
+}
+
 export function useDeleteTask() {
   const invalidate = useInvalidateTasks();
   return useMutation({
@@ -104,8 +121,8 @@ export function useSubmitTask() {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       toast.success('Đã gửi công việc để duyệt');
     },
-    onError: () => {
-      toast.error('Gửi duyệt thất bại');
+    onError: (error: { response?: { data?: { message?: string } } }) => {
+      toast.error(error?.response?.data?.message || 'Gửi duyệt thất bại');
     },
   });
 }
@@ -118,8 +135,8 @@ export function useApproveTask() {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       toast.success('Đã phê duyệt công việc');
     },
-    onError: () => {
-      toast.error('Phê duyệt thất bại');
+    onError: (error: { response?: { data?: { message?: string } } }) => {
+      toast.error(error?.response?.data?.message || 'Phê duyệt thất bại');
     },
   });
 }
@@ -132,8 +149,8 @@ export function useRejectTask() {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       toast.success('Đã từ chối công việc');
     },
-    onError: () => {
-      toast.error('Từ chối thất bại');
+    onError: (error: { response?: { data?: { message?: string } } }) => {
+      toast.error(error?.response?.data?.message || 'Từ chối thất bại');
     },
   });
 }

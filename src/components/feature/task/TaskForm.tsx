@@ -1,10 +1,11 @@
+/* eslint-disable react-hooks/set-state-in-render */
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
-import type { Task, CreateTaskRequest, UpdateTaskRequest } from '@/types/task';
-import { PRIORITY_LABEL, TASK_STATUS_LABEL } from '@/types/task';
+import type { Task, CreateTaskRequest, UpdateTaskRequest, TaskPriority } from '@/types/task';
+import { PRIORITY_LABEL } from '@/types/task';
 
 interface TaskFormProps {
   open: boolean;
@@ -18,23 +19,21 @@ export function TaskForm({ open, onClose, onSubmit, task, loading }: TaskFormPro
   const isEdit = !!task;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState('MEDIUM');
-  const [status, setStatus] = useState('DRAFT');
+  const [priority, setPriority] = useState<TaskPriority>('MEDIUM');
   const [dueDate, setDueDate] = useState('');
   const [errors, setErrors] = useState<{ title?: string }>({});
 
+  // Reset form when task changes or modal opens
   useEffect(() => {
     if (task) {
       setTitle(task.title);
       setDescription(task.description ?? '');
       setPriority(task.priority);
-      setStatus(task.status);
       setDueDate(task.due_date ? task.due_date.split('T')[0] : '');
     } else {
       setTitle('');
       setDescription('');
       setPriority('MEDIUM');
-      setStatus('DRAFT');
       setDueDate('');
     }
     setErrors({});
@@ -44,7 +43,6 @@ export function TaskForm({ open, onClose, onSubmit, task, loading }: TaskFormPro
     setTitle('');
     setDescription('');
     setPriority('MEDIUM');
-    setStatus('DRAFT');
     setDueDate('');
     setErrors({});
     onClose();
@@ -57,11 +55,11 @@ export function TaskForm({ open, onClose, onSubmit, task, loading }: TaskFormPro
       return;
     }
 
+    // Status is controlled by backend (always DRAFT for new tasks)
     const data: CreateTaskRequest | UpdateTaskRequest = {
       title: title.trim(),
       description: description.trim() || undefined,
-      priority: priority as any,
-      status: status as any,
+      priority,
       due_date: dueDate ? new Date(dueDate).toISOString() : undefined,
     };
 
@@ -69,11 +67,6 @@ export function TaskForm({ open, onClose, onSubmit, task, loading }: TaskFormPro
   };
 
   const priorityOptions = Object.entries(PRIORITY_LABEL).map(([value, label]) => ({
-    value,
-    label,
-  }));
-
-  const statusOptions = Object.entries(TASK_STATUS_LABEL).map(([value, label]) => ({
     value,
     label,
   }));
@@ -123,21 +116,13 @@ export function TaskForm({ open, onClose, onSubmit, task, loading }: TaskFormPro
           />
         </div>
 
-        {/* Priority & Status */}
-        <div className="grid grid-cols-2 gap-4">
-          <Select
-            label="Mức độ ưu tiên"
-            options={priorityOptions}
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-          />
-          <Select
-            label="Trạng thái"
-            options={statusOptions}
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          />
-        </div>
+        {/* Priority */}
+        <Select
+          label="Mức độ ưu tiên"
+          options={priorityOptions}
+          value={priority}
+          onChange={(e) => setPriority(e.target.value as TaskPriority)}
+        />
 
         {/* Due Date */}
         <Input

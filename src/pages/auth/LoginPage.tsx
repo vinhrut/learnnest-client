@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiMail } from 'react-icons/fi';
 import { Button } from '@/components/ui/Button';
@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/Input';
 import { PasswordInput } from '@/components/ui/PasswordInput';
 import { toast } from '@/components/ui/toast';
 import { useLoginMutation } from '@/hooks/auth/auth.queries';
+import { useAuth } from '@/hooks/useAuth';
 import { firstErrorMessage } from '@/lib/errors';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -13,6 +14,22 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function LoginPage() {
   const navigate = useNavigate();
   const login = useLoginMutation();
+  const { user, isAuthed } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthed && user) {
+      // Redirect based on role
+      const role = user.roles[0];
+      if (role === 'LEAD') {
+        navigate('/leader/dashboard', { replace: true });
+      } else if (role === 'BA') {
+        navigate('/ba/dashboard', { replace: true });
+      } else {
+        navigate('/dev/dashboard', { replace: true });
+      }
+    }
+  }, [isAuthed, user, navigate]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,7 +50,17 @@ export function LoginPage() {
     login.mutate(
       { email: email.trim(), password, remember },
       {
-        onSuccess: () => navigate('/dashboard', { replace: true }),
+        onSuccess: () => {
+          // Navigate based on role
+          const role = user?.roles[0] || 'USER';
+          if (role === 'LEAD') {
+            navigate('/leader/dashboard', { replace: true });
+          } else if (role === 'BA') {
+            navigate('/ba/dashboard', { replace: true });
+          } else {
+            navigate('/dev/dashboard', { replace: true });
+          }
+        },
         onError: (err) => toast.error(firstErrorMessage(err)),
       },
     );
