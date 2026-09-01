@@ -48,6 +48,7 @@ export function UserManagerPage() {
       else p.delete('q');
       p.delete('page');
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
 
   const handleStatusChange = (value: UserStatus | '') => {

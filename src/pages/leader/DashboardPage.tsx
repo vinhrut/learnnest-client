@@ -1,98 +1,147 @@
-import {
-  FiFolder,
-  FiLock,
-  FiSlash,
-  FiUserCheck,
-  FiUsers,
-} from 'react-icons/fi';
+import { useState } from 'react';
 import { Card } from '@/components/ui/Card';
-import { useAuth } from '@/hooks/useAuth';
-import { useUsersQuery } from '@/hooks/users/users.queries';
-import type { UserStatus } from '@/types/user';
-import { RecentUsersCard } from '@/components/feature/dashboard/RecentUsersCard';
-import { StatCard } from '@/components/feature/dashboard/StatCard';
-import { StatusBreakdown } from '@/components/feature/dashboard/StatusBreakdown';
+import { Button } from '@/components/ui/Button';
+import { AlertList } from '@/components/feature/dashboard/AlertList';
+import type { Task } from '@/types/task';
+
+// Mock tasks for AlertList demo
+const MOCK_TASKS: Task[] = [
+  {
+    id: '1',
+    code: 'TSK-1042',
+    title: 'Hoàn thiện báo cáo tài chính Q3',
+    description: '',
+    status: 'TODO',
+    priority: 'HIGH',
+    approval_status: 'PENDING',
+    project_id: 'p1',
+    assignee_id: 'u1',
+    creator_id: 'u1',
+    due_date: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    completed_at: null,
+    assignee: {
+      id: 'u1',
+      username: 'tranb',
+      email: 'tranb@email.com',
+      full_name: 'Trần Thị B',
+      avatar_url: null,
+    },
+  },
+  {
+    id: '2',
+    code: 'TSK-1045',
+    title: 'Duyệt thiết kế giao diện Mobile',
+    description: '',
+    status: 'TODO',
+    priority: 'MEDIUM',
+    approval_status: 'PENDING',
+    project_id: 'p1',
+    assignee_id: 'u2',
+    creator_id: 'u1',
+    due_date: new Date(Date.now() + 3600000 * 2).toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    completed_at: null,
+    assignee: {
+      id: 'u2',
+      username: 'levc',
+      email: 'levc@email.com',
+      full_name: 'Lê Văn C',
+      avatar_url: null,
+    },
+  },
+];
 
 export function LeaderDashboardPage() {
-  const { user } = useAuth();
-
-  const recent = useUsersQuery({ page: 1, limit: 5 });
-  const totalQ = useUsersQuery({ page: 1, limit: 1 });
-  const activeQ = useUsersQuery({ page: 1, limit: 1, status: 'ACTIVE' });
-  const inactiveQ = useUsersQuery({ page: 1, limit: 1, status: 'INACTIVE' });
-  const lockedQ = useUsersQuery({ page: 1, limit: 1, status: 'LOCKED' });
-
-  const counts: Record<UserStatus, number> = {
-    ACTIVE: activeQ.data?.meta.total ?? 0,
-    INACTIVE: inactiveQ.data?.meta.total ?? 0,
-    LOCKED: lockedQ.data?.meta.total ?? 0,
-  };
-  const statsLoading =
-    totalQ.isLoading ||
-    activeQ.isLoading ||
-    inactiveQ.isLoading ||
-    lockedQ.isLoading;
+  const [dueTasks] = useState<Task[]>(MOCK_TASKS);
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Header */}
       <header>
-        <h1 className="text-2xl font-bold text-ink">
-          Xin chào, {user?.full_name || user?.username}
+        <h1 className="text-headline-md text-on-surface font-bold">
+          Tổng quan Quản lý
         </h1>
-        <p className="mt-1 text-sm text-muted">
-          Tổng quan hệ thống quản lý công việc.
+        <p className="mt-1 text-body-md text-on-surface-variant">
+          Hiệu suất dự án và tình trạng công việc hiện tại.
         </p>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label="Tổng người dùng"
-          value={totalQ.data?.meta.total ?? 0}
-          icon={FiUsers}
-          tone="primary"
-          loading={statsLoading}
-        />
-        <StatCard
-          label="Đang hoạt động"
-          value={counts.ACTIVE}
-          icon={FiUserCheck}
-          tone="success"
-          loading={statsLoading}
-        />
-        <StatCard
-          label="Ngưng hoạt động"
-          value={counts.INACTIVE}
-          icon={FiSlash}
-          tone="neutral"
-          loading={statsLoading}
-        />
-        <StatCard
-          label="Đã khoá"
-          value={counts.LOCKED}
-          icon={FiLock}
-          tone="danger"
-          loading={statsLoading}
-        />
+      {/* Export Button */}
+      <div className="flex justify-end">
+        <Button variant="secondary" leftIcon="download">
+          Xuất báo cáo (PDF/Excel)
+        </Button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <RecentUsersCard
-            users={recent.data?.data ?? []}
-            loading={recent.isLoading}
-          />
-        </div>
-        <div className="flex flex-col gap-6">
-          <StatusBreakdown counts={counts} />
-          <Card dashed>
-            <div className="flex items-center gap-2 text-muted">
-              <FiFolder className="h-4 w-4" />
-              <h3 className="text-sm font-semibold">Dự án &amp; Công việc</h3>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-label-md text-on-surface-variant">Tổng số Task</span>
+            <span className="material-symbols-outlined text-outline text-xl">format_list_bulleted</span>
+          </div>
+          <div className="text-headline-md text-on-surface font-bold">1,248</div>
+        </Card>
+        <Card className="p-4 border-l-4 border-l-[#0052CC]">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-label-md text-on-surface-variant">Cần làm</span>
+            <span className="material-symbols-outlined text-outline text-xl">pending_actions</span>
+          </div>
+          <div className="text-headline-md text-on-surface font-bold">342</div>
+        </Card>
+        <Card className="p-4 border-l-4 border-l-[#FFAB00]">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-label-md text-on-surface-variant">Đang làm</span>
+            <span className="material-symbols-outlined text-outline text-xl">hourglass_empty</span>
+          </div>
+          <div className="text-headline-md text-on-surface font-bold">456</div>
+        </Card>
+        <Card className="p-4 border-l-4 border-l-[#36B37E]">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-label-md text-on-surface-variant">Đã xong</span>
+            <span className="material-symbols-outlined text-outline text-xl">check_circle</span>
+          </div>
+          <div className="text-headline-md text-on-surface font-bold">412</div>
+        </Card>
+        <Card className="p-4 border-l-4 border-l-[#FF5630]">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-label-md text-on-surface-variant">Quá hạn</span>
+            <span className="material-symbols-outlined text-[#FF5630] text-xl">error</span>
+          </div>
+          <div className="text-headline-md text-[#FF5630] font-bold">38</div>
+        </Card>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid gap-6 lg:grid-cols-12">
+        {/* Left: Charts (Span 8) */}
+        <div className="lg:col-span-8 flex flex-col gap-6">
+          {/* Status Chart */}
+          <Card title="Phân bổ trạng thái công việc">
+            <div className="h-64 flex items-center justify-center border border-dashed border-outline-variant rounded bg-surface-container-lowest">
+              <span className="text-on-surface-variant text-body-md">[Biểu đồ Pie Chart]</span>
             </div>
-            <p className="mt-2 text-sm text-muted">
-              Chưa có dữ liệu — module đang được phát triển.
-            </p>
           </Card>
+          {/* Workload Chart */}
+          <Card title="Khối lượng công việc theo nhân viên">
+            <div className="h-64 flex items-end justify-between px-4 border-b border-l border-outline-variant relative">
+              {/* Bar chart mockup */}
+              <div className="w-12 bg-[#0052CC] h-[80%] rounded-t opacity-90 hover:opacity-100 transition-opacity relative group"></div>
+              <div className="w-12 bg-[#0052CC] h-[60%] rounded-t opacity-90 hover:opacity-100 transition-opacity relative group"></div>
+              <div className="w-12 bg-[#0052CC] h-[95%] rounded-t opacity-90 hover:opacity-100 transition-opacity relative group"></div>
+              <div className="w-12 bg-[#0052CC] h-[40%] rounded-t opacity-90 hover:opacity-100 transition-opacity relative group"></div>
+              <div className="w-12 bg-[#0052CC] h-[70%] rounded-t opacity-90 hover:opacity-100 transition-opacity relative group"></div>
+              <div className="w-12 bg-[#0052CC] h-[55%] rounded-t opacity-90 hover:opacity-100 transition-opacity relative group"></div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Right: Alerts (Span 4) */}
+        <div className="lg:col-span-4">
+          <AlertList tasks={dueTasks} />
         </div>
       </div>
     </div>

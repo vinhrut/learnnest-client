@@ -4,8 +4,7 @@ import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 
 /**
- * Layout cho khu vực đã đăng nhập: sidebar cố định (desktop) / drawer (mobile),
- * topbar cố định, và vùng nội dung giới hạn bề rộng để không vỡ trên màn lớn.
+ * Main authenticated layout with sidebar navigation and topbar
  */
 export function AppLayout() {
   const [navOpen, setNavOpen] = useState(false);
@@ -14,7 +13,7 @@ export function AppLayout() {
     <div className="min-h-screen bg-canvas">
       <Sidebar open={navOpen} onClose={() => setNavOpen(false)} />
       <Topbar onOpenNav={() => setNavOpen(true)} />
-      <main className="px-4 pb-12 pt-[4.5rem] md:ml-60 md:px-8 md:pt-20">
+      <main className="pt-[calc(56px+24px)] px-6 pb-6 md:ml-60 transition-all duration-300">
         <div className="mx-auto w-full max-w-7xl">
           <Outlet />
         </div>

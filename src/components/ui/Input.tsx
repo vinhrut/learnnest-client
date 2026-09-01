@@ -16,9 +16,9 @@ interface InputProps
 }
 
 export const inputBaseClass =
-  'w-full rounded-lg border bg-white px-3 text-sm text-ink outline-none transition-colors ' +
-  'placeholder:text-muted/60 focus:border-primary focus:ring-2 focus:ring-primary/20 ' +
-  'disabled:bg-canvas disabled:text-muted';
+  'w-full rounded-lg border bg-surface-container-lowest px-3 text-body-md text-on-surface outline-none transition-all ' +
+  'placeholder:text-on-surface-variant/60 focus:border-primary-container focus:ring-1 focus:ring-primary-container ' +
+  'disabled:bg-surface-container-low disabled:text-on-surface-variant';
 
 export function Field({
   label,
@@ -31,16 +31,16 @@ export function Field({
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={htmlFor} className="text-sm font-medium text-ink">
+        <label htmlFor={htmlFor} className="text-label-md text-on-surface font-semibold">
           {label}
-          {required && <span className="text-danger"> *</span>}
+          {required && <span className="text-error"> *</span>}
         </label>
       )}
       {children}
       {error ? (
-        <p className="text-xs text-danger">{error}</p>
+        <p className="text-label-md text-error">{error}</p>
       ) : hint ? (
-        <p className="text-xs text-muted">{hint}</p>
+        <p className="text-label-md text-on-surface-variant">{hint}</p>
       ) : null}
     </div>
   );
@@ -60,7 +60,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     >
       <div className="relative">
         {leftIcon && (
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
             {leftIcon}
           </span>
         )}
@@ -72,14 +72,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             'h-10',
             leftIcon && 'pl-10',
             rightSlot && 'pr-10',
-            error && 'border-danger focus:border-danger focus:ring-danger/20',
-            !error && 'border-line',
+            error && 'border-error focus:border-error focus:ring-error/20',
+            !error && 'border-outline-variant',
             className,
           )}
           {...props}
         />
         {rightSlot && (
-          <span className="absolute right-2 top-1/2 -translate-y-1/2">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2">
             {rightSlot}
           </span>
         )}

@@ -12,6 +12,7 @@ import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
 
 // Shared pages
 import { ProfilePage } from '@/pages/ba/ProfilePage';
+import { TaskPage } from '@/pages/task/TaskPage';
 
 // Leader pages
 import { LeaderDashboardPage } from '@/pages/leader/DashboardPage';
@@ -22,10 +23,12 @@ import { UserManagerPage } from '@/pages/leader/UserManagerPage';
 // BA pages
 import { BADashboardPage } from '@/pages/ba/DashboardPage';
 import { BAProjectPage } from '@/pages/ba/ProjectPage';
+import { BATaskPage } from '@/pages/ba/BATaskPage';
 
 // Dev pages
 import { DevDashboardPage } from '@/pages/dev/DashboardPage';
 import { DevProjectPage } from '@/pages/dev/ProjectPage';
+import { DevTaskPage } from '@/pages/dev/DevTaskPage';
 
 export const router = createBrowserRouter([
   {
@@ -71,6 +74,7 @@ export const router = createBrowserRouter([
           { path: '/leader/dashboard', element: <LeaderDashboardPage /> },
           { path: '/leader/projects', element: <LeaderProjectPage /> },
           { path: '/leader/projects/:id', element: <LeaderProjectDetailPage /> },
+          { path: '/leader/tasks', element: <TaskPage /> },
           { path: '/leader/users', element: <UserManagerPage /> },
           { path: '/leader/profile', element: <ProfilePage /> },
         ],
@@ -86,6 +90,7 @@ export const router = createBrowserRouter([
         children: [
           { path: '/ba/dashboard', element: <BADashboardPage /> },
           { path: '/ba/projects', element: <BAProjectPage /> },
+          { path: '/ba/tasks', element: <BATaskPage /> },
           { path: '/ba/profile', element: <ProfilePage /> },
         ],
       },
@@ -100,6 +105,7 @@ export const router = createBrowserRouter([
         children: [
           { path: '/dev/dashboard', element: <DevDashboardPage /> },
           { path: '/dev/projects', element: <DevProjectPage /> },
+          { path: '/dev/tasks', element: <DevTaskPage /> },
           { path: '/dev/profile', element: <ProfilePage /> },
         ],
       },
@@ -109,6 +115,7 @@ export const router = createBrowserRouter([
       { path: '/profile', element: <Navigate to="/leader/profile" replace /> },
       { path: '/projects', element: <Navigate to="/leader/projects" replace /> },
       { path: '/projects/:id', element: <Navigate to="/leader/projects/:id" replace /> },
+      { path: '/tasks', element: <Navigate to="/leader/tasks" replace /> },
       { path: '/users', element: <Navigate to="/leader/users" replace /> },
 
       { path: '*', element: <NotFound /> },

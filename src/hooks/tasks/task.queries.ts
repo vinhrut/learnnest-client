@@ -1,0 +1,139 @@
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import { taskApi } from '@/api/task.api';
+import type {
+  CreateTaskRequest,
+  UpdateTaskRequest,
+  TaskFilters,
+  SubmitTaskRequest,
+  ApproveTaskRequest,
+  RejectTaskRequest,
+} from '@/types/task';
+import { toast } from '@/components/ui/toast/toast.store';
+
+export const taskKeys = {
+  all: ['tasks'] as const,
+  list: (filters?: TaskFilters) => ['tasks', 'list', filters] as const,
+  detail: (id: string) => ['tasks', 'detail', id] as const,
+  byProject: (projectId: string) => ['tasks', 'project', projectId] as const,
+};
+
+export function useTasksQuery(filters?: TaskFilters) {
+  return useQuery({
+    queryKey: taskKeys.list(filters),
+    queryFn: () => taskApi.getTasks(filters),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useTasksByProjectQuery(projectId: string | undefined) {
+  return useQuery({
+    queryKey: taskKeys.byProject(projectId ?? ''),
+    queryFn: () => taskApi.getTasksByProject(projectId!),
+    enabled: !!projectId,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useTaskQuery(id: string | undefined) {
+  return useQuery({
+    queryKey: taskKeys.detail(id ?? ''),
+    queryFn: () => taskApi.getTask(id!),
+    enabled: !!id,
+  });
+}
+
+function useInvalidateTasks() {
+  const queryClient = useQueryClient();
+  return () => queryClient.invalidateQueries({ queryKey: taskKeys.all });
+}
+
+export function useCreateTask() {
+  const invalidate = useInvalidateTasks();
+  return useMutation({
+    mutationFn: (payload: CreateTaskRequest) => taskApi.createTask(payload),
+    onSuccess: () => {
+      invalidate();
+      toast.success('Tạo công việc thành công');
+    },
+    onError: () => {
+      toast.error('Tạo công việc thất bại');
+    },
+  });
+}
+
+export function useUpdateTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateTaskRequest }) =>
+      taskApi.updateTask(id, payload),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      queryClient.invalidateQueries({ queryKey: taskKeys.detail(id) });
+      toast.success('Cập nhật công việc thành công');
+    },
+    onError: () => {
+      toast.error('Cập nhật công việc thất bại');
+    },
+  });
+}
+
+export function useDeleteTask() {
+  const invalidate = useInvalidateTasks();
+  return useMutation({
+    mutationFn: (id: string) => taskApi.deleteTask(id),
+    onSuccess: () => {
+      invalidate();
+      toast.success('Xóa công việc thành công');
+    },
+    onError: () => {
+      toast.error('Xóa công việc thất bại');
+    },
+  });
+}
+
+export function useSubmitTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: SubmitTaskRequest) => taskApi.submitTask(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      toast.success('Đã gửi công việc để duyệt');
+    },
+    onError: () => {
+      toast.error('Gửi duyệt thất bại');
+    },
+  });
+}
+
+export function useApproveTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: ApproveTaskRequest) => taskApi.approveTask(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      toast.success('Đã phê duyệt công việc');
+    },
+    onError: () => {
+      toast.error('Phê duyệt thất bại');
+    },
+  });
+}
+
+export function useRejectTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: RejectTaskRequest) => taskApi.rejectTask(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      toast.success('Đã từ chối công việc');
+    },
+    onError: () => {
+      toast.error('Từ chối thất bại');
+    },
+  });
+}
