@@ -1,8 +1,8 @@
 import { api } from '@/lib/axios';
-import type { CreateTaskRequest, ProjectOption, TaskCard } from '@/types/task';
+import type { CreateTaskVinhRequest, ProjectOption, TaskCard } from '@/types/task';
 
 export const taskVinhApi = {
-  create: (payload: CreateTaskRequest) =>
+  create: (payload: CreateTaskVinhRequest) =>
     api.post<TaskCard>('/task-vinh', payload).then((r) => r.data),
 
   listAssignedToMe: () =>

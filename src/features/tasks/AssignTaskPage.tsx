@@ -6,14 +6,14 @@ import { Select } from '@/components/ui/Select';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { toast } from '@/components/ui/toast';
 import { firstErrorMessage } from '@/lib/errors';
-import { useUsersQuery } from '@/hooks/queries/users.queries';
+import { useUsersQuery } from '@/hooks/users/users.queries';
 import {
   useCreateTask,
   useProjectOptionsQuery,
 } from '@/hooks/queries/tasks.queries';
 import {
   TASK_PRIORITY_LABEL,
-  type CreateTaskRequest,
+  type CreateTaskVinhRequest,
   type TaskPriority,
 } from '@/types/task';
 
@@ -84,7 +84,7 @@ export function AssignTaskPage() {
     ev.preventDefault();
     if (!validate()) return;
 
-    const payload: CreateTaskRequest = {
+    const payload: CreateTaskVinhRequest = {
       projectId: form.projectId,
       assigneeId: form.assigneeId,
       title: form.title.trim(),

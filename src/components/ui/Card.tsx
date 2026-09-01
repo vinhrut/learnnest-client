@@ -2,8 +2,7 @@ import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
 /**
- * Thẻ nội dung dùng chung: viền + nền trắng + bo góc. Có thể kèm header
- * (title + action) tách bằng đường kẻ.
+ * Thẻ nội dung dùng chung theo Material Design 3
  */
 export function Card({
   title,
@@ -12,6 +11,7 @@ export function Card({
   className,
   bodyClassName,
   dashed = false,
+  headerClassName,
 }: {
   title?: ReactNode;
   action?: ReactNode;
@@ -19,20 +19,25 @@ export function Card({
   className?: string;
   bodyClassName?: string;
   dashed?: boolean;
+  headerClassName?: string;
 }) {
   const hasHeader = title != null || action != null;
   return (
     <div
       className={cn(
-        'rounded-xl border bg-white',
-        dashed ? 'border-dashed border-line' : 'border-line',
+        'rounded-xl border bg-surface-container-lowest',
+        dashed ? 'border-dashed border-outline-variant' : 'border-outline-variant',
         className,
       )}
     >
       {hasHeader && (
-        <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
+        <div className={cn(
+          'flex items-center justify-between gap-3 border-b border-outline-variant px-5 py-4',
+          'bg-surface-container-low rounded-t-xl',
+          headerClassName,
+        )}>
           {typeof title === 'string' ? (
-            <h3 className="text-sm font-semibold text-ink">{title}</h3>
+            <h3 className="text-headline-sm text-on-surface font-semibold">{title}</h3>
           ) : (
             title
           )}
