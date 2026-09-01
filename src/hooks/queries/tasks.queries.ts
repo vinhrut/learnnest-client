@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { taskVinhApi } from '@/api/tasks.api';
-import type { CreateTaskRequest } from '@/types/task';
+import type { CreateTaskVinhRequest } from '@/types/task';
 
 export const taskKeys = {
   all: ['tasks'] as const,
@@ -26,7 +26,7 @@ export function useProjectOptionsQuery() {
 export function useCreateTask() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: CreateTaskRequest) => taskVinhApi.create(payload),
+    mutationFn: (payload: CreateTaskVinhRequest) => taskVinhApi.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.assignedToMe });
     },

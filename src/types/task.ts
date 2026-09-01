@@ -50,6 +50,12 @@ export interface TaskProject {
   code: string;
 }
 
+export interface ProjectOption {
+  id: string;
+  name: string;
+  code: string;
+}
+
 // Task Card (for vinh's task-vinh API)
 interface TaskPerson {
   id: string;
@@ -78,6 +84,16 @@ export interface CreateTaskRequest {
   project_id?: string;
   assignee_id?: string;
   due_date?: string;
+}
+
+// Vinh's CreateTaskRequest for task-vinh API
+export interface CreateTaskVinhRequest {
+  projectId: string;
+  assigneeId: string;
+  title: string;
+  description?: string;
+  priority?: TaskPriority;
+  dueDate?: string;
 }
 
 export interface UpdateTaskRequest {
@@ -183,12 +199,15 @@ export const TASK_STATUS_CONFIG: Record<
 };
 
 // Priority configs
-export const PRIORITY_LABEL: Record<TaskPriority, string> = {
+export const TASK_PRIORITY_LABEL: Record<TaskPriority, string> = {
   LOW: 'Thấp',
   MEDIUM: 'Trung bình',
   HIGH: 'Cao',
   URGENT: 'Khẩn cấp',
 };
+
+// Alias for backward compatibility
+export const PRIORITY_LABEL = TASK_PRIORITY_LABEL;
 
 export const PRIORITY_CONFIG: Record<
   TaskPriority,
