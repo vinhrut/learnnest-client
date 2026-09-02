@@ -6,10 +6,12 @@ import { LoginPage } from '@/features/auth/LoginPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { ProfilePage } from '@/features/profile/ProfilePage';
 import { UserListPage } from '@/features/users/UserListPage';
-import { Forbidden, NotFound } from '@/pages/error/NotFound';
+import { Forbidden, NotFound } from '@/pages/error/Notfound';
 import { GuestRoute } from './GuestRoute';
 import { ProtectedRoute } from './ProtectedRoute';
 import { RouteError } from './RouteError';
+import { Comment } from '@/components/comments/comment';
+import { ChatBox } from '@/components/chatBoxs/chatBoxs';
 
 export const router = createBrowserRouter([
   {
@@ -61,7 +63,10 @@ export const router = createBrowserRouter([
           },
         ],
       },
-
+      {
+        path: "/comments",
+        element: <Comment />
+      },
       { path: '/403', element: <Forbidden /> },
       { path: '*', element: <NotFound /> },
     ],
