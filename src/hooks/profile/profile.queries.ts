@@ -9,7 +9,6 @@ export const profileKeys = {
   me: ['me', 'profile'] as const,
 };
 
-/** Hồ sơ đầy đủ của người đang đăng nhập (kèm phone / avatar_url mà /auth/me không trả). */
 export function useMyProfileQuery() {
   const userId = useAuthStore((s) => s.user?.id);
   return useQuery({
@@ -25,11 +24,6 @@ type ProfilePayload = Pick<
   'full_name' | 'phone' | 'avatar_url'
 >;
 
-/**
- * Tự cập nhật hồ sơ (chỉ các trường backend cho phép non-admin sửa).
- * Sau khi lưu: làm mới hồ sơ + danh sách user, và đồng bộ lại `user` trong
- * auth store để tên/avatar trên topbar cập nhật ngay.
- */
 export function useUpdateMyProfile() {
   const queryClient = useQueryClient();
   const userId = useAuthStore((s) => s.user?.id);
@@ -40,11 +34,8 @@ export function useUpdateMyProfile() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: profileKeys.me });
       queryClient.invalidateQueries({ queryKey: userKeys.all });
-      try {
-        setUser(await authApi.me());
-      } catch {
-        /* không nghiêm trọng — dữ liệu sẽ đồng bộ ở lần bootstrap sau */
-      }
+      const refreshed = await authApi.me().catch(() => null);
+      if (refreshed) setUser(refreshed);
     },
   });
 }

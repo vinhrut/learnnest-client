@@ -11,9 +11,6 @@ const SIZE: Record<Size, string> = {
   xl: 'h-20 w-20 text-2xl',
 };
 
-/**
- * Avatar component with fallback initials
- */
 export function Avatar({
   src,
   name,

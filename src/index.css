@@ -223,24 +223,6 @@ body {
   background-color: var(--color-outline);
 }
 
-/* Material Symbols Outlined */
-.material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
-  font-weight: normal;
-  font-style: normal;
-  display: inline-block;
-  line-height: 1;
-  text-transform: none;
-  letter-spacing: normal;
-  word-wrap: normal;
-  white-space: nowrap;
-  direction: ltr;
-}
-
-.material-symbols-outlined[data-weight="fill"] {
-  font-variation-settings: 'FILL' 1;
-}
-
 /* Kanban scrollbar */
 .kanban-scroll::-webkit-scrollbar {
   height: 8px;

@@ -12,7 +12,6 @@ function formatDate(iso: string): string {
   });
 }
 
-/** Thẻ chỉ-đọc tóm tắt tài khoản của người đang đăng nhập. */
 export function ProfileInfoCard({ user }: { user: User }) {
   return (
     <Card>

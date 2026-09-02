@@ -5,6 +5,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { Avatar } from '@/components/ui/Avatar';
 import { useAvailableUsersQuery, useAddProjectMember } from '@/hooks/projects/project.queries';
 import { toast } from '@/components/ui/toast';
+import { ROLE_LABEL } from '@/types/user';
 
 interface AddMemberModalProps {
   projectId: string;
@@ -103,7 +104,7 @@ export function AddMemberModal({ projectId, open, onClose }: AddMemberModalProps
                   <span className="text-xs text-muted">{user.email}</span>
                 </div>
                 <span className="rounded bg-canvas px-2 py-0.5 text-[10px] font-medium text-muted">
-                  {user.role}
+                  {ROLE_LABEL[user.role] ?? user.role}
                 </span>
               </label>
             ))}

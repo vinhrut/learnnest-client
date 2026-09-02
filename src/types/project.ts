@@ -60,6 +60,13 @@ export interface AddMemberRequest {
   project_role?: ProjectMemberRole;
 }
 
+export const PROJECT_MEMBER_ROLE_LABEL: Record<ProjectMemberRole, string> = {
+  OWNER: 'Chủ sở hữu',
+  MANAGER: 'Quản lý',
+  MEMBER: 'Thành viên',
+  VIEWER: 'Người xem',
+};
+
 export const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = {
   PLANNING: 'Lên kế hoạch',
   ACTIVE: 'Đang chạy',

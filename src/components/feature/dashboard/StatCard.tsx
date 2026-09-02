@@ -1,28 +1,35 @@
+import type { IconType } from 'react-icons';
+import { FiAlertCircle, FiCheckCircle, FiGrid, FiList, FiLoader } from 'react-icons/fi';
 import { cn } from '@/lib/cn';
 import { Spinner } from '@/components/ui/Spinner';
 
 type Tone = 'primary' | 'success' | 'warning' | 'danger' | 'neutral';
 
-const TONE: Record<Tone, { border: string; text: string }> = {
+const TONE: Record<Tone, { border: string; text: string; icon: IconType }> = {
   primary: {
     border: 'border-l-primary-container',
     text: 'text-on-primary-container',
+    icon: FiList,
   },
   success: {
     border: 'border-l-success',
     text: 'text-success',
+    icon: FiCheckCircle,
   },
   warning: {
     border: 'border-l-warning',
     text: 'text-warning',
+    icon: FiLoader,
   },
   danger: {
     border: 'border-l-error',
     text: 'text-error',
+    icon: FiAlertCircle,
   },
   neutral: {
     border: 'border-l-outline',
     text: 'text-on-surface-variant',
+    icon: FiGrid,
   },
 };
 
@@ -33,17 +40,6 @@ export interface StatCardProps {
   loading?: boolean;
 }
 
-/**
- * StatCard - KPI card with optional colored left border indicator
- * Uses Material Symbols icons based on tone
- *
- * @example
- * <StatCard
- *   label="Tổng số Task"
- *   value={1248}
- *   tone="primary"
- * />
- */
 export function StatCard({
   label,
   value,
@@ -51,6 +47,7 @@ export function StatCard({
   loading = false,
 }: StatCardProps) {
   const toneConfig = TONE[tone];
+  const ToneIcon = toneConfig.icon;
 
   return (
     <div
@@ -64,13 +61,7 @@ export function StatCard({
         <p className="text-label-md text-on-surface-variant font-semibold uppercase tracking-wide">
           {label}
         </p>
-        <span className={cn('material-symbols-outlined text-xl', toneConfig.text)}>
-          {tone === 'primary' && 'format_list_bulleted'}
-          {tone === 'success' && 'check_circle'}
-          {tone === 'warning' && 'hourglass_empty'}
-          {tone === 'danger' && 'error'}
-          {tone === 'neutral' && 'dashboard'}
-        </span>
+        <ToneIcon className={cn('text-xl', toneConfig.text)} />
       </div>
       <div>
         {loading ? (

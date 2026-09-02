@@ -25,7 +25,7 @@ export function TaskPriorityBadge({
       )}
     >
       {showIcon && (
-        <span className="material-symbols-outlined text-xs">{config.icon}</span>
+        <config.icon className="text-xs" />
       )}
       {config.label}
     </span>

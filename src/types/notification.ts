@@ -7,7 +7,6 @@ export type NotificationType =
   | 'TASK_DUE'
   | 'SYSTEM';
 
-/** Bản ghi thông báo như backend trả về (GET /notifications). */
 export interface NotificationItem {
   id: string;
   user_id: string;

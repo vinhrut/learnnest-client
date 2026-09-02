@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FiChevronRight, FiClipboard, FiUser } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
@@ -9,7 +10,6 @@ import { useMyProfileQuery } from '@/hooks/profile/profile.queries';
 import { ProfileInfoCard } from '@/components/feature/profile/ProfileInfoCard';
 import type { Task } from '@/types/task';
 
-// Mock tasks for AlertList demo
 const MOCK_TASKS: Task[] = [
   {
     id: '1',
@@ -64,7 +64,6 @@ export function BADashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
       <header>
         <h1 className="text-headline-md text-on-surface font-bold">
           Xin chào, {user?.full_name || user?.username}
@@ -74,7 +73,6 @@ export function BADashboardPage() {
         </p>
       </header>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
           label="Công việc của tôi"
@@ -123,20 +121,20 @@ export function BADashboardPage() {
                 className="flex items-center justify-between rounded-lg border border-outline-variant px-3 py-2.5 text-body-md font-medium text-on-surface hover:bg-surface-container transition-colors"
               >
                 <span className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-xl text-on-surface-variant">account_circle</span>
+                  <FiUser className="text-xl text-on-surface-variant" />
                   Cập nhật hồ sơ
                 </span>
-                <span className="material-symbols-outlined text-xl text-on-surface-variant">chevron_right</span>
+                <FiChevronRight className="text-xl text-on-surface-variant" />
               </Link>
               <Link
                 to="/ba/tasks"
                 className="flex items-center justify-between rounded-lg border border-outline-variant px-3 py-2.5 text-body-md font-medium text-on-surface hover:bg-surface-container transition-colors"
               >
                 <span className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-xl text-on-surface-variant">assignment</span>
+                  <FiClipboard className="text-xl text-on-surface-variant" />
                   Công việc của tôi
                 </span>
-                <span className="material-symbols-outlined text-xl text-on-surface-variant">chevron_right</span>
+                <FiChevronRight className="text-xl text-on-surface-variant" />
               </Link>
             </div>
           </Card>

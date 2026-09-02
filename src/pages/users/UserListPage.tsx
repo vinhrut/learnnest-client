@@ -41,7 +41,6 @@ export function UserListPage() {
     );
   };
 
-  // Đồng bộ ô tìm kiếm (đã debounce) lên URL, đưa về trang 1 khi từ khoá đổi.
   useEffect(() => {
     if (debouncedSearch === urlSearch) return;
     patchParams((p) => {

@@ -7,13 +7,6 @@ import { taskKeys } from '@/hooks/queries/tasks.queries';
 import { notificationKeys } from '@/hooks/queries/notifications.queries';
 import type { RealtimeNotification } from '@/types/task';
 
-/**
- * Kết nối socket realtime khi đã đăng nhập và lắng nghe thông báo task.
- * Gắn MỘT LẦN ở `AppLayout` (chỉ render khi đã đăng nhập).
- *
- * Khi có thông báo: hiện toast + làm mới danh sách "Việc của tôi" và các query
- * thông báo (để badge chuông cập nhật ngay), không cần reload trang.
- */
 export function useRealtimeNotifications() {
   const queryClient = useQueryClient();
   const status = useAuthStore((s) => s.status);

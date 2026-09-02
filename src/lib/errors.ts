@@ -1,6 +1,5 @@
 import { ApiError } from '@/types/api';
 
-/** Lấy danh sách message lỗi để hiển thị. */
 export function errorMessages(error: unknown): string[] {
   if (error instanceof ApiError) return error.messages;
   if (error instanceof Error) return [error.message];
@@ -11,7 +10,6 @@ export function firstErrorMessage(error: unknown): string {
   return errorMessages(error)[0];
 }
 
-/** Đoán field bị lỗi từ nội dung message (dùng cho form user). */
 export function guessFieldErrors(
   error: unknown,
 ): Partial<Record<'username' | 'email', string>> {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { FiBell, FiLogOut, FiMenu, FiSearch, FiUser } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
 import { useAuth } from '@/hooks/useAuth';
@@ -40,19 +41,17 @@ export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
 
   return (
     <header className="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between gap-4 border-b border-outline-variant bg-surface-container-lowest px-4 md:left-60">
-      {/* Left: Mobile menu + Search */}
       <div className="flex items-center gap-4 flex-1">
         <button
           onClick={onOpenNav}
           className="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high transition-transform duration-150 active:scale-90 md:hidden"
           aria-label="Mở menu"
         >
-          <span className="material-symbols-outlined">menu</span>
+          <FiMenu />
         </button>
 
-        {/* Search Bar */}
         <div className="relative w-full max-w-md hidden md:block">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl">search</span>
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl" />
           <input
             className="w-full h-8 pl-10 pr-4 rounded-full bg-surface border border-outline-variant text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
             placeholder="Tìm kiếm công việc..."
@@ -63,15 +62,12 @@ export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
         <h1 className="md:hidden text-headline-sm font-bold text-primary">TaskMaster</h1>
       </div>
 
-      {/* Right: Notifications + User */}
       <div className="flex items-center gap-2">
-        {/* Notifications */}
         <button className="text-on-surface-variant hover:bg-surface-container-high rounded-full p-2 transition-transform duration-150 active:scale-90 relative">
-          <span className="material-symbols-outlined text-2xl">notifications</span>
+          <FiBell className="text-2xl" />
           <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border border-surface-container-lowest"></span>
         </button>
 
-        {/* User Menu */}
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setOpen((v) => !v)}
@@ -104,7 +100,7 @@ export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
                 className="flex items-center gap-3 px-4 py-3 text-body-md text-on-surface hover:bg-surface-container transition-colors"
                 role="menuitem"
               >
-                <span className="material-symbols-outlined text-xl">account_circle</span>
+                <FiUser className="text-xl" />
                 Hồ sơ cá nhân
               </Link>
               <button
@@ -112,7 +108,7 @@ export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
                 className="flex w-full items-center gap-3 px-4 py-3 text-left text-body-md text-error hover:bg-surface-container transition-colors"
                 role="menuitem"
               >
-                <span className="material-symbols-outlined text-xl">logout</span>
+                <FiLogOut className="text-xl" />
                 Đăng xuất
               </button>
             </div>

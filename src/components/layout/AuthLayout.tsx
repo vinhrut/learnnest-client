@@ -1,10 +1,6 @@
 import type { ReactNode } from 'react';
 import { FiCheckSquare } from 'react-icons/fi';
 
-/**
- * Layout cho các trang chưa đăng nhập (hiện chỉ có Login).
- * Bố cục 2 cột: brand bên trái (ẩn ở mobile) + nội dung bên phải.
- */
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen">

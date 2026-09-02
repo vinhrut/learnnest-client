@@ -8,16 +8,6 @@ export interface AlertItemProps {
   onClick?: () => void;
 }
 
-/**
- * AlertItem - Single alert item for tasks due soon
- *
- * @example
- * <AlertItem
- *   task={task}
- *   dueType="today"
- *   onClick={() => openTask(task.id)}
- * />
- */
 export function AlertItem({ task, dueType, onClick }: AlertItemProps) {
   const dueTime = task.due_date
     ? new Date(task.due_date).toLocaleTimeString('vi-VN', {

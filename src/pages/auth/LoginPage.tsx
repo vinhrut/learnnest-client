@@ -7,6 +7,7 @@ import { PasswordInput } from '@/components/ui/PasswordInput';
 import { toast } from '@/components/ui/toast';
 import { useLoginMutation } from '@/hooks/auth/auth.queries';
 import { useAuth } from '@/hooks/useAuth';
+import { homePathForUser } from '@/routes/roleHome';
 import { firstErrorMessage } from '@/lib/errors';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -16,18 +17,9 @@ export function LoginPage() {
   const login = useLoginMutation();
   const { user, isAuthed } = useAuth();
 
-  // Redirect if already logged in
   useEffect(() => {
     if (isAuthed && user) {
-      // Redirect based on role
-      const role = user.roles[0];
-      if (role === 'LEAD') {
-        navigate('/leader/dashboard', { replace: true });
-      } else if (role === 'BA') {
-        navigate('/ba/dashboard', { replace: true });
-      } else {
-        navigate('/dev/dashboard', { replace: true });
-      }
+      navigate(homePathForUser(user), { replace: true });
     }
   }, [isAuthed, user, navigate]);
 
@@ -50,16 +42,8 @@ export function LoginPage() {
     login.mutate(
       { email: email.trim(), password, remember },
       {
-        onSuccess: () => {
-          // Navigate based on role
-          const role = user?.roles[0] || 'USER';
-          if (role === 'LEAD') {
-            navigate('/leader/dashboard', { replace: true });
-          } else if (role === 'BA') {
-            navigate('/ba/dashboard', { replace: true });
-          } else {
-            navigate('/dev/dashboard', { replace: true });
-          }
+        onSuccess: (data) => {
+          navigate(homePathForUser(data.user), { replace: true });
         },
         onError: (err) => toast.error(firstErrorMessage(err)),
       },

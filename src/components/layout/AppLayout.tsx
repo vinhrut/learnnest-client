@@ -4,9 +4,6 @@ import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 
-/**
- * Main authenticated layout with sidebar navigation and topbar
- */
 export function AppLayout() {
   const [navOpen, setNavOpen] = useState(false);
 

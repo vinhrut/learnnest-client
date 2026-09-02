@@ -18,13 +18,11 @@ export function Badge({
   children,
   className,
   icon,
-  iconName,
 }: {
   tone?: Tone;
   children: ReactNode;
   className?: string;
   icon?: ReactNode;
-  iconName?: string;
 }) {
   return (
     <span
@@ -34,11 +32,7 @@ export function Badge({
         className,
       )}
     >
-      {icon ? (
-        <span className="mr-1">{icon}</span>
-      ) : iconName ? (
-        <span className="material-symbols-outlined mr-1 text-base">{iconName}</span>
-      ) : null}
+      {icon ? <span className="mr-1">{icon}</span> : null}
       {children}
     </span>
   );

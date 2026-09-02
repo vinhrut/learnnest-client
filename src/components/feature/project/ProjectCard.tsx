@@ -1,3 +1,4 @@
+import { FiCalendar, FiCheckCircle } from 'react-icons/fi';
 import type { Project } from '@/types/project';
 import { PROJECT_STATUS_LABEL, PROJECT_STATUS_COLOR } from '@/types/project';
 
@@ -21,7 +22,6 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
         ${isCompleted ? 'opacity-75 grayscale-[20%]' : ''}
       `}
     >
-      {/* Status indicator bar */}
       {!isCompleted && (
         <div
           className={`absolute left-0 top-0 h-1 w-full ${
@@ -30,7 +30,6 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
         />
       )}
 
-      {/* Header */}
       <div className="mb-4 flex items-start justify-between">
         <h3 className="pr-8 text-lg font-semibold text-ink line-clamp-2">
           {project.name}
@@ -47,24 +46,23 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
         </span>
       </div>
 
-      {/* Code */}
       <p className="mb-2 text-xs font-medium text-muted">{project.code}</p>
 
-      {/* Description */}
       <p className="mb-6 line-clamp-2 flex-grow text-sm text-muted">
         {project.description || 'Không có mô tả'}
       </p>
 
-      {/* Footer */}
       <div className="flex items-center justify-between border-t border-line pt-4">
         <div className="flex items-center gap-2 text-xs text-muted">
           <span className="font-medium text-ink">{project.code}</span>
         </div>
 
         <div className="flex items-center gap-1 text-muted">
-          <span className="material-symbols-outlined text-[16px]">
-            {isCompleted ? 'check_circle' : 'calendar_today'}
-          </span>
+          {isCompleted ? (
+            <FiCheckCircle className="text-[16px]" />
+          ) : (
+            <FiCalendar className="text-[16px]" />
+          )}
           <span className="text-xs font-medium">
             {new Date(project.created_at).toLocaleDateString('vi-VN')}
           </span>

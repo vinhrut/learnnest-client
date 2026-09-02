@@ -16,7 +16,6 @@ interface MultiSelectProps<T extends string> {
   onChange: (next: T[]) => void;
 }
 
-/** Chọn nhiều giá trị dạng chip bật/tắt. */
 export function MultiSelect<T extends string>({
   label,
   error,

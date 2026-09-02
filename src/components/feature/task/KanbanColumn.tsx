@@ -1,4 +1,5 @@
 import { useDroppable } from '@dnd-kit/core';
+import { FiAward, FiCheckCircle, FiShield, FiXCircle } from 'react-icons/fi';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { cn } from '@/lib/cn';
 import { TaskCard } from './TaskCard';
@@ -76,7 +77,6 @@ export function KanbanColumn({
         isOver && 'bg-primary-fixed/20',
       )}
     >
-      {/* Column Header */}
       <div
         className={cn(
           'flex items-center justify-between border-b border-outline-variant p-3',
@@ -97,24 +97,23 @@ export function KanbanColumn({
         </h3>
         <div className="flex items-center gap-1">
           {isProtected && (
-            <span className="material-symbols-outlined text-xl text-on-surface-variant cursor-help" title="Manager only">shield</span>
+            <FiShield className="text-xl text-on-surface-variant cursor-help" title="Chỉ Trưởng nhóm thao tác được" />
           )}
           {status === 'DOING' && (
             <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
           )}
           {status === 'DONE' && (
-            <span className="material-symbols-outlined text-xl text-success">check_circle</span>
+            <FiCheckCircle className="text-xl text-success" />
           )}
           {status === 'CLOSED' && (
-            <span className="material-symbols-outlined text-xl text-success">verified</span>
+            <FiAward className="text-xl text-success" />
           )}
           {status === 'REJECTED' && (
-            <span className="material-symbols-outlined text-xl text-error">cancel</span>
+            <FiXCircle className="text-xl text-error" />
           )}
         </div>
       </div>
 
-      {/* Tasks List */}
       <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
         <div className="flex-1 overflow-y-auto p-2 kanban-scroll">
           {loading ? (
