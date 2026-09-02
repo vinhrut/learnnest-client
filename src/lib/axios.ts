@@ -11,13 +11,11 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-/** Instance "trần" (không interceptor) để gọi refresh, tránh vòng lặp. */
 const bare = axios.create({
   baseURL: env.apiBaseUrl,
   headers: { 'Content-Type': 'application/json' },
 });
 
-// ─── Request: gắn access token ───────────────────────────────────────────────
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = authStore.getState().accessToken;
   if (token) {
@@ -26,7 +24,6 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
-// ─── Response: tự refresh khi 401, rồi chuẩn hoá lỗi ─────────────────────────
 let refreshPromise: Promise<string> | null = null;
 
 async function runRefresh(): Promise<string> {

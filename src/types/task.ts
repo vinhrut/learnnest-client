@@ -1,9 +1,10 @@
-// Map BE enum to FE (for UI display)
+import type { IconType } from 'react-icons';
+import { FiAlertOctagon, FiChevronDown, FiChevronsUp, FiMinus } from 'react-icons/fi';
+
 export type TaskStatus = 'DRAFT' | 'WAITING_APPROVAL' | 'NEW' | 'DOING' | 'DONE' | 'CLOSED' | 'REJECTED';
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 export type ApprovalStatus = 'NOT_ASSIGNED' | 'WAITING_APPROVAL' | 'APPROVED' | 'ASSIGNED' | 'REJECTED' | 'CANCELLED';
 
-// Map to BE enum
 export type TaskStatusBE = 'DRAFT' | 'WAITING_APPROVAL' | 'NEW' | 'DOING' | 'DONE' | 'CLOSED' | 'REJECTED';
 export type TaskPriorityBE = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 export type ApprovalStatusBE = 'NOT_ASSIGNED' | 'WAITING_APPROVAL' | 'APPROVED' | 'ASSIGNED' | 'REJECTED' | 'CANCELLED';
@@ -56,7 +57,6 @@ export interface ProjectOption {
   code: string;
 }
 
-// Task Card (for vinh's task-vinh API)
 interface TaskPerson {
   id: string;
   full_name: string | null;
@@ -86,7 +86,6 @@ export interface CreateTaskRequest {
   due_date?: string;
 }
 
-// Vinh's CreateTaskRequest for task-vinh API
 export interface CreateTaskVinhRequest {
   projectId: string;
   assigneeId: string;
@@ -121,7 +120,6 @@ export interface RejectTaskRequest {
   reason?: string;
 }
 
-// Query params for task list
 export interface TaskFilters {
   project_id?: string;
   assignee_id?: string;
@@ -130,7 +128,6 @@ export interface TaskFilters {
   search?: string;
 }
 
-// Status configs for UI
 export const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
   DRAFT: 'Nháp',
   WAITING_APPROVAL: 'Chờ duyệt',
@@ -141,7 +138,6 @@ export const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
   REJECTED: 'Bị từ chối',
 };
 
-// Kanban board mapping (FE UI states)
 export const KANBAN_BOARD_STATUS: Record<string, TaskStatus> = {
   TODO: 'NEW',
   IN_PROGRESS: 'DOING',
@@ -198,7 +194,6 @@ export const TASK_STATUS_CONFIG: Record<
   },
 };
 
-// Priority configs
 export const TASK_PRIORITY_LABEL: Record<TaskPriority, string> = {
   LOW: 'Thấp',
   MEDIUM: 'Trung bình',
@@ -206,40 +201,38 @@ export const TASK_PRIORITY_LABEL: Record<TaskPriority, string> = {
   URGENT: 'Khẩn cấp',
 };
 
-// Alias for backward compatibility
 export const PRIORITY_LABEL = TASK_PRIORITY_LABEL;
 
 export const PRIORITY_CONFIG: Record<
   TaskPriority,
-  { label: string; color: string; bgColor: string; icon: string }
+  { label: string; color: string; bgColor: string; icon: IconType }
 > = {
   HIGH: {
     label: 'Cao',
     color: 'text-danger',
     bgColor: 'bg-error-container',
-    icon: 'keyboard_double_arrow_up',
+    icon: FiChevronsUp,
   },
   MEDIUM: {
     label: 'Trung bình',
     color: 'text-warning',
     bgColor: 'bg-warning-soft',
-    icon: 'drag_handle',
+    icon: FiMinus,
   },
   LOW: {
     label: 'Thấp',
     color: 'text-on-surface-variant',
     bgColor: 'bg-surface-container-high',
-    icon: 'keyboard_arrow_down',
+    icon: FiChevronDown,
   },
   URGENT: {
     label: 'Khẩn cấp',
     color: 'text-danger',
     bgColor: 'bg-error',
-    icon: 'priority_high',
+    icon: FiAlertOctagon,
   },
 };
 
-// Approval status configs
 export const APPROVAL_STATUS_LABEL: Record<ApprovalStatus, string> = {
   NOT_ASSIGNED: 'Chưa giao',
   WAITING_APPROVAL: 'Chờ duyệt',
@@ -285,7 +278,6 @@ export const APPROVAL_STATUS_CONFIG: Record<
   },
 };
 
-/** Payload backend đẩy qua socket event `notification` (namespace `/realtime`). */
 export interface RealtimeNotification {
   id: string;
   type: string;

@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
+import { useAuth } from '@/hooks/useAuth';
+import { useProjectMembersQuery } from '@/hooks/projects/project.queries';
+import { canAssignTask } from '@/lib/permissions';
 import type { Task, CreateTaskRequest, UpdateTaskRequest, TaskPriority } from '@/types/task';
 import { PRIORITY_LABEL } from '@/types/task';
 
@@ -13,28 +16,37 @@ interface TaskFormProps {
   onSubmit: (data: CreateTaskRequest | UpdateTaskRequest) => void;
   task?: Task;
   loading?: boolean;
+  projectId?: string;
 }
 
-export function TaskForm({ open, onClose, onSubmit, task, loading }: TaskFormProps) {
+export function TaskForm({ open, onClose, onSubmit, task, loading, projectId }: TaskFormProps) {
   const isEdit = !!task;
+  const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('MEDIUM');
   const [dueDate, setDueDate] = useState('');
+  const [assigneeId, setAssigneeId] = useState('');
   const [errors, setErrors] = useState<{ title?: string }>({});
 
-  // Reset form when task changes or modal opens
+  const canAssign = canAssignTask(user);
+  const { data: members } = useProjectMembersQuery(
+    canAssign && open ? projectId : undefined,
+  );
+
   useEffect(() => {
     if (task) {
       setTitle(task.title);
       setDescription(task.description ?? '');
       setPriority(task.priority);
       setDueDate(task.due_date ? task.due_date.split('T')[0] : '');
+      setAssigneeId(task.assignee_id ?? '');
     } else {
       setTitle('');
       setDescription('');
       setPriority('MEDIUM');
       setDueDate('');
+      setAssigneeId('');
     }
     setErrors({});
   }, [task, open]);
@@ -44,23 +56,23 @@ export function TaskForm({ open, onClose, onSubmit, task, loading }: TaskFormPro
     setDescription('');
     setPriority('MEDIUM');
     setDueDate('');
+    setAssigneeId('');
     setErrors({});
     onClose();
   };
 
   const handleSubmit = () => {
-    // Validate
     if (!title.trim()) {
       setErrors({ title: 'Tiêu đề là bắt buộc' });
       return;
     }
 
-    // Status is controlled by backend (always DRAFT for new tasks)
     const data: CreateTaskRequest | UpdateTaskRequest = {
       title: title.trim(),
       description: description.trim() || undefined,
       priority,
       due_date: dueDate ? new Date(dueDate).toISOString() : undefined,
+      ...(canAssign && assigneeId ? { assignee_id: assigneeId } : {}),
     };
 
     onSubmit(data);
@@ -89,7 +101,6 @@ export function TaskForm({ open, onClose, onSubmit, task, loading }: TaskFormPro
       }
     >
       <div className="space-y-4">
-        {/* Title */}
         <Input
           label="Tiêu đề"
           placeholder="Nhập tiêu đề công việc"
@@ -102,7 +113,6 @@ export function TaskForm({ open, onClose, onSubmit, task, loading }: TaskFormPro
           error={errors.title}
         />
 
-        {/* Description */}
         <div className="flex flex-col gap-1.5">
           <label className="text-label-md text-on-surface font-semibold">
             Mô tả
@@ -116,7 +126,6 @@ export function TaskForm({ open, onClose, onSubmit, task, loading }: TaskFormPro
           />
         </div>
 
-        {/* Priority */}
         <Select
           label="Mức độ ưu tiên"
           options={priorityOptions}
@@ -124,13 +133,28 @@ export function TaskForm({ open, onClose, onSubmit, task, loading }: TaskFormPro
           onChange={(e) => setPriority(e.target.value as TaskPriority)}
         />
 
-        {/* Due Date */}
         <Input
           label="Hạn chót"
           type="date"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
         />
+
+        {canAssign && (
+          <Select
+            label="Người thực hiện"
+            hint="Để trống nếu chưa giao cho ai."
+            value={assigneeId}
+            onChange={(e) => setAssigneeId(e.target.value)}
+            options={[
+              { value: '', label: 'Chưa giao' },
+              ...(members ?? []).map((member) => ({
+                value: member.user_id,
+                label: member.user.full_name || member.user.username,
+              })),
+            ]}
+          />
+        )}
       </div>
     </Modal>
   );

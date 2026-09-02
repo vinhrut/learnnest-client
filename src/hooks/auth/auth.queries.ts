@@ -41,7 +41,6 @@ export function useResetPasswordMutation() {
     mutationFn: (payload: ResetPasswordRequest) =>
       authApi.resetPassword(payload),
     onSuccess: () => {
-      // Đổi mật khẩu xong: mọi phiên cũ đã bị backend thu hồi.
       useAuthStore.getState().clearSession();
       queryClient.clear();
     },
@@ -54,7 +53,6 @@ export function useChangePasswordMutation() {
     mutationFn: (payload: ChangePasswordRequest) =>
       authApi.changePassword(payload),
     onSuccess: () => {
-      // Backend thu hồi toàn bộ refresh token → buộc đăng nhập lại.
       useAuthStore.getState().clearSession();
       queryClient.clear();
     },
@@ -68,11 +66,7 @@ export function useLogoutMutation() {
     mutationFn: async () => {
       const { refreshToken } = useAuthStore.getState();
       if (refreshToken) {
-        try {
-          await authApi.logout(refreshToken);
-        } catch {
-          // Kể cả logout server lỗi, vẫn xoá phiên phía client.
-        }
+        await authApi.logout(refreshToken).catch(() => undefined);
       }
     },
     onSettled: () => {

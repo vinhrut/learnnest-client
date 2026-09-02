@@ -1,10 +1,6 @@
 import { isRouteErrorResponse, useNavigate, useRouteError } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 
-/**
- * `errorElement` cấp router — hiển thị thay cho màn hình trắng khi một route/loader
- * ném lỗi (404 của router, lỗi render, …).
- */
 export function RouteError() {
   const error = useRouteError();
   const navigate = useNavigate();
@@ -13,7 +9,7 @@ export function RouteError() {
   let detail = 'Vui lòng tải lại trang hoặc quay về trang chủ.';
 
   if (isRouteErrorResponse(error)) {
-    title = `${error.status} — ${error.statusText}`;
+    title = `Lỗi ${error.status}`;
     detail =
       error.status === 404
         ? 'Không tìm thấy trang bạn yêu cầu.'

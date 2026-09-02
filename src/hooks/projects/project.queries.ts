@@ -73,14 +73,6 @@ export function useUpdateProject() {
   });
 }
 
-export function useDeleteProject() {
-  const invalidate = useInvalidateProjects();
-  return useMutation({
-    mutationFn: (id: string) => projectApi.deleteProject(id),
-    onSuccess: invalidate,
-  });
-}
-
 export function useAddProjectMember() {
   const queryClient = useQueryClient();
   return useMutation({

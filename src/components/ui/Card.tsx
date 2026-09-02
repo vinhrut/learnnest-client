@@ -1,9 +1,6 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
-/**
- * Thẻ nội dung dùng chung theo Material Design 3
- */
 export function Card({
   title,
   action,

@@ -7,7 +7,7 @@ export const ROLE_CODES: RoleCode[] = ['ADMIN', 'BA', 'USER', 'LEAD'];
 export const ROLE_LABEL: Record<RoleCode, string> = {
   ADMIN: 'Quản trị',
   BA: 'BA',
-  USER: 'Người dùng',
+  USER: 'Lập trình viên',
   LEAD: 'Leader',
 };
 
@@ -17,9 +17,6 @@ export const USER_STATUS_LABEL: Record<UserStatus, string> = {
   LOCKED: 'Đã khoá',
 };
 
-/**
- * User như backend trả về qua `sanitizeUser` (GET /users, POST /users, ...).
- */
 export interface User {
   id: string;
   username: string;
@@ -56,7 +53,6 @@ export interface UpdateUserRequest {
   phone?: string;
   avatar_url?: string;
   password?: string;
-  /** Các trường dưới đây backend chỉ cho ADMIN sửa. */
   username?: string;
   email?: string;
   status?: UserStatus;

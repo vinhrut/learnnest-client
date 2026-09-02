@@ -8,18 +8,6 @@ export interface WorkloadChartProps {
   title?: string;
 }
 
-/**
- * WorkloadChart - Bar chart showing workload distribution by employee
- *
- * @example
- * <WorkloadChart
- *   title="Khối lượng công việc theo nhân viên"
- *   data={[
- *     { name: 'Nguyễn Văn A', value: 85 },
- *     { name: 'Trần Thị B', value: 60 },
- *   ]}
- * />
- */
 export function WorkloadChart({
   data = [
     { name: 'Nguyễn Văn A', value: 85 },
@@ -39,18 +27,15 @@ export function WorkloadChart({
         {title}
       </h3>
       <div className="relative h-64 border-b border-l border-outline-variant">
-        {/* Bar chart */}
         <div className="absolute inset-0 flex items-end justify-around px-4">
           {data.map((item, index) => (
             <div
               key={index}
               className="group relative flex flex-col items-center"
             >
-              {/* Tooltip */}
               <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden items-center gap-1 whitespace-nowrap rounded bg-inverse-surface px-2 py-1 text-xs text-on-primary group-hover:flex">
                 {item.name}: {item.value} tasks
               </div>
-              {/* Bar */}
               <div
                 className="w-12 cursor-pointer rounded-t bg-primary opacity-90 transition-all hover:opacity-100"
                 style={{ height: `${(item.value / maxValue) * 100}%` }}
@@ -59,7 +44,6 @@ export function WorkloadChart({
           ))}
         </div>
       </div>
-      {/* Legend */}
       <div className="mt-4 flex justify-center gap-4">
         {data.map((item, index) => (
           <div key={index} className="flex items-center gap-1 text-label-md text-on-surface-variant">

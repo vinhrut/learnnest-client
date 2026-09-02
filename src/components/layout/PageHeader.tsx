@@ -1,10 +1,6 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
-/**
- * Tiêu đề trang chuẩn: tên + mô tả bên trái, cụm hành động bên phải.
- * Ở màn hẹp, cụm hành động xuống dòng và giãn đầy chiều ngang.
- */
 export function PageHeader({
   title,
   subtitle,

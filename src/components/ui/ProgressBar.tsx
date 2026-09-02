@@ -1,7 +1,7 @@
 import { cn } from '@/lib/cn';
 
 interface ProgressBarProps {
-  value: number; // 0-100
+  value: number;
   max?: number;
   showLabel?: boolean;
   size?: 'sm' | 'md' | 'lg';

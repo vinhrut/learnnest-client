@@ -6,7 +6,7 @@ export function NotFound() {
     <div className="flex h-screen flex-col items-center justify-center gap-4 bg-canvas p-4">
       <FiAlertCircle className="h-16 w-16 text-muted" />
       <h1 className="text-2xl font-bold text-ink">404</h1>
-      <p className="text-muted">Trang không tìm thấy</p>
+      <p className="text-muted">Không tìm thấy trang bạn yêu cầu</p>
       <Link
         to="/dashboard"
         className="rounded-lg bg-primary px-4 py-2 text-white hover:bg-primary/90"

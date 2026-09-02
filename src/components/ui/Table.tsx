@@ -6,9 +6,7 @@ export interface Column<T> {
   key: string;
   header: ReactNode;
   render: (row: T) => ReactNode;
-  /** Áp cho cả `<th>` và `<td>` (ví dụ `hidden lg:table-cell`). */
   className?: string;
-  /** Chỉ áp cho `<td>` (ví dụ `max-w-[220px] truncate`). */
   cellClassName?: string;
   align?: 'left' | 'right' | 'center';
 }

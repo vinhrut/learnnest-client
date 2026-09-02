@@ -22,7 +22,6 @@ function initial(user: User): FormState {
   };
 }
 
-/** Form sửa thông tin cá nhân (chỉ các trường non-admin được backend cho phép). */
 export function ProfileForm({ user }: { user: User }) {
   const update = useUpdateMyProfile();
   const [form, setForm] = useState<FormState>(() => initial(user));

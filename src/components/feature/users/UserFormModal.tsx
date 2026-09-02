@@ -63,10 +63,6 @@ function initialForm(user: User | null): FormState {
   };
 }
 
-/**
- * Modal tạo / sửa người dùng. Được mount lại (qua `key`) mỗi lần mở nên state
- * khởi tạo thẳng từ prop, không cần effect đồng bộ.
- */
 export function UserFormModal({
   user,
   onClose,
@@ -182,7 +178,7 @@ export function UserFormModal({
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <Input
-            label="Username"
+            label="Tên đăng nhập"
             value={form.username}
             onChange={(e) => set('username', e.target.value)}
             error={errors.username}
@@ -223,7 +219,7 @@ export function UserFormModal({
         <div className="flex items-end gap-3">
           <div className="flex-1">
             <Input
-              label="Avatar URL"
+              label="Ảnh đại diện (URL)"
               placeholder="https://..."
               value={form.avatar_url}
               onChange={(e) => set('avatar_url', e.target.value)}

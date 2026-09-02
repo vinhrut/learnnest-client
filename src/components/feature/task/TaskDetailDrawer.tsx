@@ -1,14 +1,34 @@
 import { useState } from 'react';
+import { FiAlignLeft, FiCalendar, FiClock, FiFlag, FiFolder, FiInfo, FiMessageSquare, FiPaperclip, FiUser, FiUserPlus } from 'react-icons/fi';
 import { Drawer } from '@/components/ui/Drawer';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Tabs } from '@/components/ui/Tabs';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
+import { Select } from '@/components/ui/Select';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useAuth } from '@/hooks/useAuth';
-import { useSubmitTask, useApproveTask, useRejectTask } from '@/hooks/tasks/task.queries';
-import type { Task } from '@/types/task';
-import { TASK_STATUS_CONFIG, PRIORITY_CONFIG, APPROVAL_STATUS_CONFIG } from '@/types/task';
+import {
+  useSubmitTask,
+  useApproveTask,
+  useRejectTask,
+  useUpdateTask,
+  useUpdateTaskStatus,
+  useDeleteTask,
+} from '@/hooks/tasks/task.queries';
+import { useProjectMembersQuery } from '@/hooks/projects/project.queries';
+import {
+  canApproveTask,
+  canAssignTask,
+  canCloseTask,
+  canDeleteTask,
+  canEditTask,
+  canMoveTask,
+  canSubmitTask,
+} from '@/lib/permissions';
+import type { Task, TaskStatus } from '@/types/task';
+import { TASK_STATUS_CONFIG, PRIORITY_CONFIG, APPROVAL_STATUS_CONFIG, TASK_STATUS_LABEL } from '@/types/task';
 
 interface TaskDetailDrawerProps {
   task: Task | null;
@@ -19,16 +39,23 @@ interface TaskDetailDrawerProps {
 }
 
 export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: TaskDetailDrawerProps) {
-  const { user, hasRole } = useAuth();
-  const isLeader = hasRole('LEAD');
-  const isBAOrDEV = hasRole('BA', 'USER', 'ADMIN');
+  const { user } = useAuth();
 
   const submitTask = useSubmitTask();
   const approveTask = useApproveTask();
   const rejectTask = useRejectTask();
+  const updateTask = useUpdateTask();
+  const updateStatus = useUpdateTaskStatus();
+  const deleteTask = useDeleteTask();
+
+  const canAssign = canAssignTask(user);
+  const { data: members } = useProjectMembersQuery(
+    canAssign && open ? task?.project_id : undefined,
+  );
 
   const [newComment, setNewComment] = useState('');
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
   if (!task) return null;
@@ -38,6 +65,10 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
   const approvalConfig = APPROVAL_STATUS_CONFIG[task.assignment_status];
 
   const handleSubmit = () => {
+    if (task.status === 'REJECTED') {
+      handleMove('WAITING_APPROVAL');
+      return;
+    }
     submitTask.mutate(
       { task_id: task.id },
       {
@@ -72,19 +103,42 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
     );
   };
 
+  const handleMove = (status: TaskStatus) => {
+    updateStatus.mutate(
+      { id: task.id, payload: { status } },
+      { onSuccess: () => onRefresh?.() },
+    );
+  };
+
+  const handleAssign = (assigneeId: string) => {
+    updateTask.mutate(
+      { id: task.id, payload: { assignee_id: assigneeId } },
+      { onSuccess: () => onRefresh?.() },
+    );
+  };
+
+  const handleDelete = () => {
+    deleteTask.mutate(task.id, {
+      onSuccess: () => {
+        setShowDeleteDialog(false);
+        onRefresh?.();
+        onClose();
+      },
+    });
+  };
+
   const tabs = [
     {
       id: 'discussion',
       label: (
         <span className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-xl">forum</span>
+          <FiMessageSquare className="text-xl" />
           Thảo luận
         </span>
       ),
       content: (
         <div className="space-y-4">
           <p className="py-4 text-center text-body-md text-on-surface-variant">Chưa có bình luận nào.</p>
-          {/* Comment Input */}
           <div className="flex gap-4 items-start">
             <Avatar name={user?.full_name} size="sm" />
             <div className="flex-1 rounded-xl border border-outline-variant bg-surface focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 overflow-hidden transition-all">
@@ -107,7 +161,7 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
       id: 'files',
       label: (
         <span className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-xl">attach_file</span>
+          <FiPaperclip className="text-xl" />
           Tài liệu
         </span>
       ),
@@ -117,7 +171,7 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
       id: 'activity',
       label: (
         <span className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-xl">history</span>
+          <FiClock className="text-xl" />
           Nhật ký
         </span>
       ),
@@ -125,12 +179,18 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
     },
   ];
 
-  // Render action buttons based on role and task state
   const renderActions = () => {
     const buttons: React.ReactNode[] = [];
 
-    // Edit button - BA/DEV can edit
-    if (isBAOrDEV && task.status !== 'CLOSED' && task.status !== 'DONE') {
+    if (canDeleteTask(user, task)) {
+      buttons.push(
+        <Button key="delete" variant="danger" onClick={() => setShowDeleteDialog(true)}>
+          Xoá
+        </Button>
+      );
+    }
+
+    if (canEditTask(user, task)) {
       buttons.push(
         <Button key="edit" variant="secondary" onClick={() => onEdit?.(task)}>
           Sửa
@@ -138,17 +198,34 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
       );
     }
 
-    // Submit for approval - BA/DEV can submit when status is DRAFT
-    if (isBAOrDEV && task.status === 'DRAFT') {
+    if (canSubmitTask(user, task)) {
       buttons.push(
-        <Button key="submit" onClick={handleSubmit} loading={submitTask.isPending}>
-          Gửi duyệt
+        <Button
+          key="submit"
+          onClick={handleSubmit}
+          loading={submitTask.isPending || updateStatus.isPending}
+        >
+          {task.status === 'REJECTED' ? 'Gửi duyệt lại' : 'Gửi duyệt'}
         </Button>
       );
     }
 
-    // Approve/Reject - Only LEAD can do this when status is WAITING_APPROVAL
-    if (isLeader && task.status === 'WAITING_APPROVAL') {
+    (['DOING', 'DONE', 'NEW'] as TaskStatus[])
+      .filter((next) => next !== task.status && canMoveTask(user, task, next))
+      .forEach((next) => {
+        buttons.push(
+          <Button
+            key={`move-${next}`}
+            variant="secondary"
+            onClick={() => handleMove(next)}
+            loading={updateStatus.isPending}
+          >
+            Chuyển sang “{TASK_STATUS_LABEL[next]}”
+          </Button>
+        );
+      });
+
+    if (canApproveTask(user, task)) {
       buttons.push(
         <Button key="reject" variant="danger" onClick={() => setShowRejectDialog(true)}>
           Từ chối
@@ -161,10 +238,13 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
       );
     }
 
-    // Final close - Only LEAD can close DONE tasks
-    if (isLeader && task.status === 'DONE') {
+    if (canCloseTask(user, task)) {
       buttons.push(
-        <Button key="close" onClick={handleApprove} loading={approveTask.isPending}>
+        <Button
+          key="close"
+          onClick={() => handleMove('CLOSED')}
+          loading={updateStatus.isPending}
+        >
           Hoàn thành
         </Button>
       );
@@ -190,9 +270,7 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
         position="right"
       >
         <div className="space-y-6">
-          {/* TOP SECTION: Meta Data */}
           <div className="space-y-4 border-b border-outline-variant pb-6">
-            {/* Task ID + Status + Approval Status */}
             <div className="flex items-center gap-3 flex-wrap">
               <Badge tone="neutral">{task.code}</Badge>
               <Badge tone={
@@ -203,26 +281,36 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
               }>
                 {statusConfig.label}
               </Badge>
-              {/* Approval Status Badge */}
               <Badge tone={task.assignment_status === 'APPROVED' || task.assignment_status === 'ASSIGNED' ? 'success' :
                 task.assignment_status === 'REJECTED' ? 'danger' : 'warning'}>
                 {approvalConfig.label}
               </Badge>
             </div>
 
-            {/* Title */}
             <h2 className="text-headline-md text-on-surface font-bold">{task.title}</h2>
 
-            {/* Meta Grid */}
             <div className="grid grid-cols-2 gap-4 text-body-md">
-              {/* Assignee */}
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-on-surface-variant">person</span>
-                <div className="flex flex-col">
+                <FiUser className="text-on-surface-variant" />
+                <div className="flex flex-1 flex-col">
                   <span className="text-label-md text-on-surface-variant uppercase tracking-wide">
                     Người thực hiện
                   </span>
-                  {task.assignee ? (
+                  {canAssign ? (
+                    <Select
+                      className="mt-1"
+                      value={task.assignee_id ?? ''}
+                      disabled={updateTask.isPending}
+                      onChange={(e) => handleAssign(e.target.value)}
+                      options={[
+                        { value: '', label: 'Chưa giao' },
+                        ...(members ?? []).map((member) => ({
+                          value: member.user_id,
+                          label: member.user.full_name || member.user.username,
+                        })),
+                      ]}
+                    />
+                  ) : task.assignee ? (
                     <div className="mt-1 flex items-center gap-2">
                       <Avatar
                         src={task.assignee.avatar_url}
@@ -239,9 +327,8 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
                 </div>
               </div>
 
-              {/* Creator */}
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-on-surface-variant">person_add</span>
+                <FiUserPlus className="text-on-surface-variant" />
                 <div className="flex flex-col">
                   <span className="text-label-md text-on-surface-variant uppercase tracking-wide">
                     Người tạo
@@ -263,9 +350,8 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
                 </div>
               </div>
 
-              {/* Due Date */}
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-on-surface-variant">calendar_today</span>
+                <FiCalendar className="text-on-surface-variant" />
                 <div className="flex flex-col">
                   <span className="text-label-md text-on-surface-variant uppercase tracking-wide">
                     Hạn chót
@@ -282,16 +368,15 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
                 </div>
               </div>
 
-              {/* Priority */}
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-on-surface-variant">flag</span>
+                <FiFlag className="text-on-surface-variant" />
                 <div className="flex flex-col">
                   <span className="text-label-md text-on-surface-variant uppercase tracking-wide">
                     Mức độ ưu tiên
                   </span>
                   <div className="mt-1 flex items-center gap-1">
                     <span className={priorityConfig.color}>
-                      <span className="material-symbols-outlined text-base">{priorityConfig.icon}</span>
+                      <priorityConfig.icon className="text-base" />
                     </span>
                     <span className={`font-medium ${priorityConfig.color}`}>
                       {priorityConfig.label}
@@ -300,9 +385,8 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
                 </div>
               </div>
 
-              {/* Project */}
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-on-surface-variant">folder</span>
+                <FiFolder className="text-on-surface-variant" />
                 <div className="flex flex-col">
                   <span className="text-label-md text-on-surface-variant uppercase tracking-wide">
                     Dự án
@@ -317,10 +401,9 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
                 </div>
               </div>
 
-              {/* Rejection Reason */}
               {task.rejection_reason && (
                 <div className="flex items-center gap-3 col-span-2 bg-error-container rounded-lg p-3">
-                  <span className="material-symbols-outlined text-error">info</span>
+                  <FiInfo className="text-error" />
                   <div className="flex flex-col">
                     <span className="text-label-md text-error uppercase tracking-wide">
                       Lý do từ chối
@@ -334,12 +417,10 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
             </div>
           </div>
 
-          {/* MIDDLE SECTION: Description */}
           <div className="space-y-8">
-            {/* Description */}
             <section>
               <h3 className="mb-3 flex items-center gap-2 text-body-lg text-on-surface font-semibold">
-                <span className="material-symbols-outlined text-on-surface-variant">subject</span>
+                <FiAlignLeft className="text-on-surface-variant" />
                 Mô tả công việc
               </h3>
               <div className="rounded-xl border border-outline-variant bg-surface p-4">
@@ -349,7 +430,6 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
               </div>
             </section>
 
-            {/* TABS: Discussion, Files, Activity */}
             <section>
               <Tabs tabs={tabs} />
             </section>
@@ -357,7 +437,6 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
         </div>
       </Drawer>
 
-      {/* Reject Dialog */}
       <Modal
         open={showRejectDialog}
         onClose={() => setShowRejectDialog(false)}
@@ -393,6 +472,17 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
           </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        open={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={handleDelete}
+        title="Xoá công việc"
+        description={`Bạn có chắc muốn xoá "${task.title}"?`}
+        confirmLabel="Xoá"
+        danger
+        loading={deleteTask.isPending}
+      />
     </>
   );
 }

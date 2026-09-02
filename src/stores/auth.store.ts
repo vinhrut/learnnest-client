@@ -3,14 +3,6 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import type { AuthUser } from '@/types/auth';
 import type { RoleCode } from '@/types/user';
 
-/**
- * Trạng thái phiên đăng nhập.
- *
- *  idle    — vừa khởi động, chưa bootstrap
- *  loading — đang gọi /auth/me để xác thực lại phiên đã lưu
- *  authed  — có token hợp lệ + thông tin user
- *  guest   — không có phiên
- */
 export type AuthStatus = 'idle' | 'loading' | 'authed' | 'guest';
 
 interface AuthState {
@@ -32,7 +24,6 @@ interface AuthState {
 
 const REMEMBER_KEY = 'ln.remember';
 
-/** Ghi nhớ đăng nhập → localStorage; ngược lại → sessionStorage. */
 export function setRemember(remember: boolean) {
   localStorage.setItem(REMEMBER_KEY, remember ? 'true' : 'false');
 }
@@ -81,7 +72,6 @@ export const useAuthStore = create<AuthState>()(
   ),
 );
 
-/** Đọc token ngoài React (dùng cho axios interceptor). */
 export const authStore = useAuthStore;
 
 export function hasRole(

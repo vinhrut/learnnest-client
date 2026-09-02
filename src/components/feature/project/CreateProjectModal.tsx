@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/Input';
 import { Spinner } from '@/components/ui/Spinner';
 import { toast } from '@/components/ui/toast';
 import { useCreateProject } from '@/hooks/projects/project.queries';
-import { useUsersQuery } from '@/hooks/users/users.queries';
 import type { ProjectStatus } from '@/types/project';
 
 interface CreateProjectModalProps {
@@ -15,7 +14,6 @@ interface CreateProjectModalProps {
 
 export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
   const createProject = useCreateProject();
-  const { data: users } = useUsersQuery({});
 
   const [formData, setFormData] = useState({
     name: '',
@@ -23,7 +21,6 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
     description: '',
     status: 'PLANNING' as ProjectStatus,
   });
-  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,10 +31,7 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
     }
 
     try {
-      await createProject.mutateAsync({
-        ...formData,
-        member_ids: selectedMembers,
-      });
+      await createProject.mutateAsync(formData);
       toast.success('Tạo dự án thành công!');
       handleClose();
     } catch (error: unknown) {
@@ -50,19 +44,8 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
 
   const handleClose = () => {
     setFormData({ name: '', code: '', description: '', status: 'PLANNING' });
-    setSelectedMembers([]);
     onClose();
   };
-
-  const toggleMember = (userId: string) => {
-    setSelectedMembers((prev) =>
-      prev.includes(userId)
-        ? prev.filter((id) => id !== userId)
-        : [...prev, userId]
-    );
-  };
-
-  const availableUsers = users?.data || [];
 
   return (
     <Modal
@@ -86,7 +69,6 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Tên dự án */}
         <div>
           <label className="mb-1.5 block text-sm font-medium text-ink">
             Tên dự án <span className="text-danger">*</span>
@@ -98,7 +80,6 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
           />
         </div>
 
-        {/* Mã dự án */}
         <div>
           <label className="mb-1.5 block text-sm font-medium text-ink">
             Mã dự án <span className="text-danger">*</span>
@@ -110,7 +91,6 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
           />
         </div>
 
-        {/* Mô tả */}
         <div>
           <label className="mb-1.5 block text-sm font-medium text-ink">Mô tả</label>
           <textarea
@@ -122,7 +102,6 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
           />
         </div>
 
-        {/* Trạng thái */}
         <div>
           <label className="mb-1.5 block text-sm font-medium text-ink">Trạng thái</label>
           <select
@@ -137,39 +116,10 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
           </select>
         </div>
 
-        {/* Thành viên */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-ink">
-            Thành viên tham gia
-          </label>
-          <div className="max-h-40 overflow-y-auto rounded-lg border border-line bg-white">
-            {availableUsers.length === 0 ? (
-              <p className="p-3 text-sm text-muted">Không có user nào</p>
-            ) : (
-              availableUsers.map((user) => (
-                <label
-                  key={user.id}
-                  className="flex cursor-pointer items-center gap-3 border-b border-line p-3 last:border-0 hover:bg-canvas"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedMembers.includes(user.id)}
-                    onChange={() => toggleMember(user.id)}
-                    className="h-4 w-4 rounded border-line text-primary focus:ring-primary"
-                  />
-                  <div className="flex flex-grow items-center gap-2">
-                    <span className="text-sm text-ink">
-                      {user.full_name || user.username}
-                    </span>
-                    <span className="rounded bg-canvas px-2 py-0.5 text-[10px] font-medium text-muted">
-                      {user.roles[0]}
-                    </span>
-                  </div>
-                  <span className="text-xs text-muted">{user.email}</span>
-                </label>
-              ))
-            )}
-          </div>
+        <div className="rounded-lg border border-dashed border-line bg-canvas p-3">
+          <p className="text-sm text-muted">
+            Thêm thành viên sau khi tạo, ở trang chi tiết dự án.
+          </p>
         </div>
       </form>
     </Modal>

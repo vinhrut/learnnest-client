@@ -26,7 +26,6 @@ export function Tabs({ tabs, defaultTab, onChange }: TabsProps) {
 
   return (
     <div>
-      {/* Tab Header */}
       <div className="flex border-b border-line">
         {tabs.map((tab) => (
           <button
@@ -49,7 +48,6 @@ export function Tabs({ tabs, defaultTab, onChange }: TabsProps) {
         ))}
       </div>
 
-      {/* Tab Content */}
       <div className="py-4">{activeContent}</div>
     </div>
   );

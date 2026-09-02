@@ -60,9 +60,9 @@ export function Button({
         <Spinner className="h-4 w-4" />
       ) : (
         <>
-          {leftIcon && <span className="material-symbols-outlined text-base">{leftIcon}</span>}
+          {leftIcon && <span className="inline-flex text-base">{leftIcon}</span>}
           {children}
-          {rightIcon && <span className="material-symbols-outlined text-base">{rightIcon}</span>}
+          {rightIcon && <span className="inline-flex text-base">{rightIcon}</span>}
         </>
       )}
     </button>

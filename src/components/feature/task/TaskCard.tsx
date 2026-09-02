@@ -1,4 +1,5 @@
 import { useSortable } from '@dnd-kit/sortable';
+import { FiClock, FiEdit2, FiX } from 'react-icons/fi';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/cn';
 import { Avatar } from '@/components/ui/Avatar';
@@ -52,14 +53,10 @@ export function TaskCard({
         task.status === 'REJECTED' && 'opacity-75',
       )}
     >
-      {/* Edit button (hover) */}
       <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity">
-        <span className="material-symbols-outlined text-base text-on-surface-variant cursor-pointer">
-          edit
-        </span>
+        <FiEdit2 className="text-base text-on-surface-variant cursor-pointer" />
       </div>
 
-      {/* Priority Badge */}
       <div className="mb-2">
         <span
           className={cn(
@@ -68,12 +65,11 @@ export function TaskCard({
             priority.color,
           )}
         >
-          <span className="material-symbols-outlined text-base">{priority.icon}</span>
+          <priority.icon className="text-base" />
           {priority.label}
         </span>
       </div>
 
-      {/* Title */}
       <h4
         className={cn(
           'mb-3 pr-6 text-body-md font-medium',
@@ -83,7 +79,6 @@ export function TaskCard({
         {task.title}
       </h4>
 
-      {/* Assignment Status (only show if not approved/assigned) */}
       {task.assignment_status && task.assignment_status !== 'APPROVED' && task.assignment_status !== 'ASSIGNED' && (
         <div className="mb-3">
           <span
@@ -96,9 +91,11 @@ export function TaskCard({
                   : 'bg-surface-variant text-on-surface-variant',
             )}
           >
-            <span className="material-symbols-outlined text-base">
-              {task.assignment_status === 'WAITING_APPROVAL' ? 'schedule' : 'close'}
-            </span>
+            {task.assignment_status === 'WAITING_APPROVAL' ? (
+              <FiClock className="text-base" />
+            ) : (
+              <FiX className="text-base" />
+            )}
             {task.assignment_status === 'WAITING_APPROVAL' ? 'Chờ duyệt' :
              task.assignment_status === 'REJECTED' ? 'Từ chối' :
              task.assignment_status === 'NOT_ASSIGNED' ? 'Chưa giao' : 'Đã hủy'}
@@ -106,7 +103,6 @@ export function TaskCard({
         </div>
       )}
 
-      {/* Footer: Task Code + Assignee */}
       <div className="flex items-center justify-between border-t border-outline-variant pt-2">
         <span className="font-mono text-mono-sm text-on-surface-variant">{task.code}</span>
         {task.assignee && (
