@@ -41,10 +41,7 @@ export function ProfilePage() {
         />
       ) : (
         <>
-          <ProfileHero
-            user={user}
-            onChangePassword={() => setChangePasswordOpen(true)}
-          />
+          <ProfileHero user={user} />
 
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-1">

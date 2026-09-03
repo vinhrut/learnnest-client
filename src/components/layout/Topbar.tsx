@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { FiLogOut, FiMenu, FiSearch, FiUser } from 'react-icons/fi';
+import { FiLogOut, FiMenu, FiUser } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
 import { NotificationBell } from '@/features/notifications/NotificationBell';

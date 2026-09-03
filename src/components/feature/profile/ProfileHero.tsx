@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
-import { FiCamera, FiLock, FiTrash2 } from 'react-icons/fi';
+import { FiCamera, FiTrash2 } from 'react-icons/fi';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -12,13 +12,7 @@ import { errorMessages } from '@/lib/errors';
 import { IMAGE_ACCEPT, MAX_AVATAR_SIZE, formatFileSize, validateImageFile } from '@/lib/upload';
 import type { User } from '@/types/user';
 
-export function ProfileHero({
-  user,
-  onChangePassword,
-}: {
-  user: User;
-  onChangePassword: () => void;
-}) {
+export function ProfileHero({ user }: { user: User }) {
   const uploadAvatar = useUploadMyAvatar();
   const deleteAvatar = useDeleteMyAvatar();
 
@@ -133,7 +127,6 @@ export function ProfileHero({
                 Xoá ảnh
               </Button>
             )}
-            
           </div>
           <p className="text-label-md text-on-surface-variant">
             JPG, PNG, WEBP hoặc GIF · tối đa {formatFileSize(MAX_AVATAR_SIZE)}
