@@ -8,13 +8,10 @@ import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-<<<<<<< HEAD
 import { Comment } from '@/components/comments/comment';
-=======
 import { Badge as StatusChip } from '@/components/ui/Badge';
 import { ExtensionRequestBanner } from './ExtensionRequestBanner';
 import { ExtensionRequestModal } from './ExtensionRequestModal';
->>>>>>> dfb335e671b189f1d89e67f8281fbe2d1f9b0804
 import { useAuth } from '@/hooks/useAuth';
 import {
   useSubmitTask,
@@ -150,8 +147,6 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
       },
     });
   };
-<<<<<<< HEAD
-=======
 
   const handleRequestExtension = (payload: {
     requested_due_date: string;
@@ -187,7 +182,6 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
     );
   };
 
->>>>>>> dfb335e671b189f1d89e67f8281fbe2d1f9b0804
   const tabs = [
     {
       id: 'discussion',
