@@ -8,6 +8,10 @@ import type {
   SubmitTaskRequest,
   ApproveTaskRequest,
   RejectTaskRequest,
+  TaskExtensionRequest,
+  CreateExtensionRequest,
+  ApproveExtensionRequest,
+  RejectExtensionRequest,
 } from '@/types/task';
 
 export const taskApi = {
@@ -40,4 +44,24 @@ export const taskApi = {
 
   rejectTask: (payload: RejectTaskRequest) =>
     api.post<Task>('/tasks/reject', payload).then((r) => r.data),
+
+  getExtensionRequests: (taskId: string) =>
+    api
+      .get<TaskExtensionRequest[]>(`/task-extensions/task/${taskId}`)
+      .then((r) => r.data),
+
+  createExtensionRequest: (payload: CreateExtensionRequest) =>
+    api
+      .post<TaskExtensionRequest>('/task-extensions', payload)
+      .then((r) => r.data),
+
+  approveExtensionRequest: (payload: ApproveExtensionRequest) =>
+    api
+      .post<TaskExtensionRequest>('/task-extensions/approve', payload)
+      .then((r) => r.data),
+
+  rejectExtensionRequest: (payload: RejectExtensionRequest) =>
+    api
+      .post<TaskExtensionRequest>('/task-extensions/reject', payload)
+      .then((r) => r.data),
 };

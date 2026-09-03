@@ -13,14 +13,19 @@ import type {
   SubmitTaskRequest,
   ApproveTaskRequest,
   RejectTaskRequest,
+  CreateExtensionRequest,
+  ApproveExtensionRequest,
+  RejectExtensionRequest,
 } from '@/types/task';
 import { toast } from '@/components/ui/toast/toast.store';
+import { firstErrorMessage } from '@/lib/errors';
 
 export const taskKeys = {
   all: ['tasks'] as const,
   list: (filters?: TaskFilters) => ['tasks', 'list', filters] as const,
   detail: (id: string) => ['tasks', 'detail', id] as const,
   byProject: (projectId: string) => ['tasks', 'project', projectId] as const,
+  extensions: (taskId: string) => ['tasks', 'extensions', taskId] as const,
 };
 
 export function useTasksQuery(filters?: TaskFilters) {
@@ -151,6 +156,67 @@ export function useRejectTask() {
     },
     onError: (error: { response?: { data?: { message?: string } } }) => {
       toast.error(error?.response?.data?.message || 'Từ chối thất bại');
+    },
+  });
+}
+
+export function useTaskExtensionsQuery(taskId: string | undefined) {
+  return useQuery({
+    queryKey: taskKeys.extensions(taskId ?? ''),
+    queryFn: () => taskApi.getExtensionRequests(taskId!),
+    enabled: !!taskId,
+  });
+}
+
+function useInvalidateExtensions() {
+  const queryClient = useQueryClient();
+  return (taskId: string) => {
+    queryClient.invalidateQueries({ queryKey: taskKeys.all });
+    queryClient.invalidateQueries({ queryKey: taskKeys.extensions(taskId) });
+  };
+}
+
+export function useRequestExtension() {
+  const invalidate = useInvalidateExtensions();
+  return useMutation({
+    mutationFn: (payload: CreateExtensionRequest) =>
+      taskApi.createExtensionRequest(payload),
+    onSuccess: (_, { task_id }) => {
+      invalidate(task_id);
+      toast.success('Đã gửi yêu cầu gia hạn');
+    },
+    onError: (error: unknown) => {
+      toast.error(firstErrorMessage(error) || 'Gửi yêu cầu gia hạn thất bại');
+    },
+  });
+}
+
+export function useApproveExtension() {
+  const invalidate = useInvalidateExtensions();
+  return useMutation({
+    mutationFn: ({ payload }: { taskId: string; payload: ApproveExtensionRequest }) =>
+      taskApi.approveExtensionRequest(payload),
+    onSuccess: (_, { taskId }) => {
+      invalidate(taskId);
+      toast.success('Đã duyệt gia hạn');
+    },
+    onError: (error: unknown) => {
+      toast.error(firstErrorMessage(error) || 'Duyệt gia hạn thất bại');
+    },
+  });
+}
+
+export function useRejectExtension() {
+  const invalidate = useInvalidateExtensions();
+  return useMutation({
+    mutationFn: ({ payload }: { taskId: string; payload: RejectExtensionRequest }) =>
+      taskApi.rejectExtensionRequest(payload),
+    onSuccess: (_, { taskId }) => {
+      invalidate(taskId);
+      toast.success('Đã từ chối yêu cầu gia hạn');
+    },
+    onError: (error: unknown) => {
+      toast.error(firstErrorMessage(error) || 'Từ chối yêu cầu gia hạn thất bại');
     },
   });
 }

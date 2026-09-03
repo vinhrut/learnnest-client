@@ -1,4 +1,5 @@
 import { api } from '@/lib/axios';
+import { toFileFormData } from '@/lib/upload';
 import type { Paginated } from '@/types/api';
 import type {
   CreateUserRequest,
@@ -29,6 +30,16 @@ export const usersApi = {
 
   unlock: (id: string) =>
     api.patch<User>(`/users/${id}/unlock`).then((r) => r.data),
+
+  // Upload ảnh đại diện từ máy. Gọi lại lần nữa = thay ảnh (ảnh cũ bị xoá
+  // trên Cloudinary phía server).
+  uploadAvatar: (id: string, file: File) =>
+    api
+      .post<User>(`/users/${id}/avatar`, toFileFormData(file))
+      .then((r) => r.data),
+
+  deleteAvatar: (id: string) =>
+    api.delete<User>(`/users/${id}/avatar`).then((r) => r.data),
 };
 
 function cleanQuery(query: UserListQuery): Record<string, unknown> {

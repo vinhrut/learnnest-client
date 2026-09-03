@@ -1,7 +1,7 @@
 import { hasRole } from '@/stores/auth.store';
 import type { AuthUser } from '@/types/auth';
 import type { Project } from '@/types/project';
-import type { Task, TaskStatus } from '@/types/task';
+import type { Task, TaskExtensionRequest, TaskStatus } from '@/types/task';
 
 type MaybeUser = AuthUser | null | undefined;
 
@@ -62,6 +62,23 @@ export function canApproveTask(user: MaybeUser, task: Task): boolean {
 
 export function canCloseTask(user: MaybeUser, task: Task): boolean {
   return hasRole(user, 'LEAD') && task.status === 'DONE';
+}
+
+export function canRequestExtension(
+  user: MaybeUser,
+  task: Task,
+  pending: TaskExtensionRequest | null | undefined,
+): boolean {
+  if (pending) return false;
+  if (task.status !== 'NEW' && task.status !== 'DOING') return false;
+  return isAssignee(user, task) && !!task.due_date;
+}
+
+export function canReviewExtension(
+  user: MaybeUser,
+  pending: TaskExtensionRequest | null | undefined,
+): boolean {
+  return hasRole(user, 'LEAD') && pending?.status === 'PENDING';
 }
 
 type TransitionOwnership = 'creator' | 'creator_or_assignee' | 'any';

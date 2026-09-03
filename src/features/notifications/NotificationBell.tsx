@@ -9,6 +9,8 @@ import {
   useNotificationsQuery,
   useUnreadCountQuery,
 } from '@/hooks/queries/notifications.queries';
+import { useAuth } from '@/hooks/useAuth';
+import { notificationTargetPath } from '@/routes/roleHome';
 import type { NotificationItem } from '@/types/notification';
 
 function timeAgo(iso: string): string {
@@ -27,6 +29,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const unread = useUnreadCountQuery();
   const list = useNotificationsQuery({ page: 1, limit: 10 });
@@ -55,7 +58,7 @@ export function NotificationBell() {
   const handleItemClick = (item: NotificationItem) => {
     if (!item.is_read) markRead.mutate(item.id);
     setOpen(false);
-    navigate('/my-tasks');
+    navigate(notificationTargetPath(user, item.task_id));
   };
 
   return (
