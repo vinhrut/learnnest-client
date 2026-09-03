@@ -1,14 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
-import axios from "axios";
 import "./comment.css"
 import { io } from "socket.io-client";
-interface CommentProps {
-    taskId: string;
-}
-
-export const Comment = ({ taskId }: CommentProps) => {
+import { commentApi } from "@/api/comment.api";
+import type { CommentProps } from "@/types/comment";
+export const Comment = ({ taskId, projectId }: CommentProps) => {
     const [commentType, setCommentType] = useState<"content" | "image" | "file" | null>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [dataComment, setDataComment] = useState<any[]>([]);
@@ -16,11 +13,44 @@ export const Comment = ({ taskId }: CommentProps) => {
     const [imgPreview, setImgPreview] = useState<string | null>(null);
     const [file, setFile] = useState<File | null>(null);
     const [comment, setComment] = useState<string>("")
-    taskId = "4d03d3e0-9b08-4f31-83ee-bccf46e2a4b5"
-    const callApiComment = async () => {
-        const data = await axios.get(`http://localhost:3000/comments/${taskId}`)
-        setDataComment(data.data?.data);
-    }
+    const [skip, setSkip] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const auth = localStorage.getItem("ln.auth");
+    const idUser = auth ? JSON.parse(auth) : null;
+    console.log("taskId", taskId)
+    console.log("projectId", projectId)
+    const loadingRef = useRef(false);
+    const callApiComment = async (currentSkip: number) => {
+        if (loadingRef.current || !hasMore) {
+            return;
+        }
+        loadingRef.current = true;
+        setLoading(true);
+        try {
+            const query = projectId
+                ? `?projectId=${projectId}&skip=${currentSkip}&limit=10`
+                : `?taskId=${taskId}&skip=${currentSkip}&limit=10`;
+
+            const res = await commentApi.getComment(query);
+
+            const newData = res.data ?? [];
+
+            setDataComment(prev => [
+                ...prev,
+                ...newData,
+            ]);
+
+            if (newData.length < 10) {
+                setHasMore(false);
+            }
+        } catch (error) {
+            console.log(error);
+        } finally {
+            loadingRef.current = false;
+            setLoading(false);
+        }
+    };
     const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         if (commentType !== null && commentType !== "content") {
             return;
@@ -61,6 +91,8 @@ export const Comment = ({ taskId }: CommentProps) => {
         e.target.value = "";
 
     }
+    console.log("comment", file)
+
     const handleSubmit = async (e?: React.FormEvent) => {
         e?.preventDefault();
         try {
@@ -79,19 +111,17 @@ export const Comment = ({ taskId }: CommentProps) => {
                     file === null
                 )
             ) {
+                console.log("sđ")
                 return;
             }
             if (commentType === "content" && comment.trim()) {
                 try {
-                    console.log(comment)
-                    await axios.post("http://localhost:3000/comments/contents",
-                        {
-                            task_id: taskId,
-                            user_id: "e780219e-490f-45bf-a194-ed80d0d827b7",
-                            content: comment,
-                            type: "comment"
-                        }
-                    )
+                    await commentApi.createComment({
+                        task_id: taskId ?? null,
+                        project_id: projectId ?? null,
+                        content: comment,
+                        type: "comment",
+                    });
                     setComment("");
                     setCommentType(null)
                 } catch (error) {
@@ -110,16 +140,22 @@ export const Comment = ({ taskId }: CommentProps) => {
                         return;
                     }
                     const formData = new FormData();
-                    formData.append("task_id", taskId);
+                    if (taskId) {
+                        formData.append("task_id", taskId);
+                    }
+
+                    if (projectId) {
+                        formData.append("project_id", projectId);
+                    }
+
                     formData.append("file", uploadFile);
                     formData.append(
                         "uploaded_by",
-                        "e780219e-490f-45bf-a194-ed80d0d827b7"
+                        idUser?.state?.user?.id
                     );
                     formData.append("type", "attachment");
 
-                    await axios.post(
-                        "http://localhost:3000/comments/attachments",
+                    await commentApi.createAttach(
                         formData
                     );
                     setImgFile(null);
@@ -137,32 +173,55 @@ export const Comment = ({ taskId }: CommentProps) => {
 
 
     useEffect(() => {
-        callApiComment()
+        setDataComment([]);
+        setSkip(0);
+        setHasMore(true);
+        loadingRef.current = false;
+
+        callApiComment(1);
+
         const socket = io("http://localhost:3000");
 
-        socket.emit("join_task", taskId);
+        socket.on("connect", () => {
+            console.log("Socket connected:", socket.id);
+
+            if (taskId) {
+                socket.emit("join_task", taskId);
+            }
+
+            if (projectId) {
+                socket.emit("join_project", projectId);
+            }
+        });
 
         socket.on("new_comment", (newComment) => {
-            setDataComment((prev) => [
-                newComment,
-                ...prev,
-
-            ]);
+            setDataComment(prev => [newComment, ...prev]);
         });
+
         socket.on("new_attachment", (newAttachment) => {
-            console.log("Attachment mới:", newAttachment);
-
-            setDataComment((prev) => [
-                newAttachment,
-                ...prev,
-            ]);
+            setDataComment(prev => [newAttachment, ...prev]);
         });
+
+        socket.on("comment_deleted", (data) => {
+            setDataComment(prev =>
+                prev.filter(item => item.id !== data.id)
+            );
+        });
+
+        socket.on("attachment_deleted", (data) => {
+            setDataComment(prev =>
+                prev.filter(item => item.id !== data.id)
+            );
+        });
+
         return () => {
             socket.off("new_comment");
             socket.off("new_attachment");
+            socket.off("comment_deleted");
+            socket.off("attachment_deleted");
             socket.disconnect();
         };
-    }, [taskId]);
+    }, [taskId, projectId]);
     const handleDeleteFileOrImg = (type: "file" | "img") => {
         if (type === "file") {
             setFile(null)
@@ -174,11 +233,140 @@ export const Comment = ({ taskId }: CommentProps) => {
             setCommentType(null)
         }
     }
+    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const element = e.currentTarget;
+
+        const isNearBottom =
+            element.scrollTop + element.clientHeight >=
+            element.scrollHeight - 200;
+
+        console.log("🔥 SCROLL", {
+            scrollTop: element.scrollTop,
+            clientHeight: element.clientHeight,
+            scrollHeight: element.scrollHeight,
+            isNearBottom,
+        });
+
+        if (
+            isNearBottom &&
+            !loadingRef.current &&
+            hasMore
+        ) {
+            const nextSkip = skip + 1;
+
+            console.log("🔥 LOAD MORE:", nextSkip);
+
+            setSkip(nextSkip);
+            callApiComment(nextSkip);
+        }
+    };
     return (
         <>
+            {
+                projectId && (
+                    <div>
+                        <div className="flex flex-col gap-2 p-2.5 h-100 bg-white overflow-y-auto scrollbar-hide ">
+                            {
+
+                                [...dataComment].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())?.map((items, index) => {
+                                    const checkFile = items?.file_url?.split("/")
+                                    return (
+                                        <div className="flex justify-end"
+                                            key={index}
+                                            style={{ justifyContent: items?.users?.id === idUser?.state?.user?.id ? "flex-end" : "flex-start" }}>
+                                            <div
+
+                                                className="flex items-end w-fit gap-3 rounded-b-full  p-3 shadow-sm hover:shadow-md transition-shadow"
+
+                                            >
+                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-500 text-sm font-semibold text-white"
+                                                    style={{ backgroundImage: `url(${items?.users?.avatar_url})`, backgroundRepeat: "no-repeat", backgroundSize: "100% 100%" }}>
+                                                    {items?.users?.full_name.charAt(0)?.toUpperCase() ?? "U"}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+
+                                                        <span className="text-xs text-gray-400">
+                                                            {items?.createdAt}
+                                                        </span>
+                                                    </div>
+                                                    {
+                                                        items?.type === "comment" ?
+                                                            <div>
+                                                                <p className="mt-1 text-sm text-gray-700 whitespace-pre-wrap wrap-break-words  bg-white p-2">
+                                                                    {items?.content}
+                                                                </p>
+                                                            </div>
+                                                            :
+                                                            <div>
+                                                                {
+                                                                    checkFile !== undefined && checkFile[4] === "raw" && (
+                                                                        <a
+                                                                            href={items.file_url}
+                                                                            download={items.file_name}
+                                                                            className="min-w-0 truncate text-sm text-gray-700 hover:underline"
+                                                                            title={items.file_name}
+                                                                        >
+                                                                            <div className="flex w-fit max-w-87.5 items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-1.5 ">
+                                                                                <svg
+                                                                                    width="16"
+                                                                                    height="16"
+                                                                                    viewBox="0 0 24 24"
+                                                                                    fill="none"
+                                                                                    stroke="currentColor"
+                                                                                    strokeWidth="2"
+                                                                                    strokeLinecap="round"
+                                                                                    strokeLinejoin="round"
+                                                                                    className="shrink-0 text-gray-600"
+                                                                                >
+                                                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                                                    <polyline points="14 2 14 8 20 8" />
+                                                                                </svg>
+
+                                                                                <span
+                                                                                    className="min-w-0 truncate text-sm text-gray-700"
+                                                                                    title={items.file_name}
+                                                                                >
+                                                                                    {items.file_name}
+                                                                                </span>
+                                                                                <span className="shrink-0 text-sm text-gray-400">
+                                                                                    {(items.size_bytes / 1024).toFixed(1)} KB
+                                                                                </span>
+
+                                                                            </div>
+                                                                        </a>
+
+                                                                    )
+                                                                }
+                                                                {
+                                                                    checkFile !== undefined && checkFile[4] === "image" && (
+                                                                        <img
+                                                                            src={items.file_url}
+                                                                            alt="Preview"
+                                                                            className="mt-2 max-h-75 max-w-full rounded-lg object-contain"
+                                                                        />
+                                                                    )
+                                                                }
+
+                                                            </div>
+                                                    }
+
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    )
+                                })
+                            }
+                        </div>
+                    </div>
+
+                )
+            }
+
             <div>
-                <form onSubmit={handleSubmit} className="bg-white rounded-2xl overflow-hidden ">
-                    <div className="flex gap-2 border border-gray-200 p-2.5 justify-between items-center">
+                <form onSubmit={handleSubmit} className="bg-white overflow-hidden ">
+                    <div className="flex gap-2 border border-gray-200 p-2.5 justify-between items-center ">
                         <div className="flex gap-2 ">
                             <div>
                                 <Input id="file-img"
@@ -344,95 +532,102 @@ export const Comment = ({ taskId }: CommentProps) => {
                 </form >
 
             </div >
-            <div className="flex flex-col gap-1 mt-2.5">
-                {
-                    dataComment?.map((items, index) => {
-                        const checkFile = items?.file_url?.split("/")
-                        return (
-                            <div
-                                key={index}
-                                className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm hover:shadow-md transition-shadow"
-                            >
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-500 text-sm font-semibold text-white"
-                                    style={{ backgroundImage: `url(${items?.users?.avatar_url})`, backgroundRepeat: "no-repeat", backgroundSize: "100% 100%" }}>
-                                    {items?.users?.full_name.charAt(0)?.toUpperCase() ?? "U"}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-semibold text-gray-800">
-                                            {items?.users?.full_name ?? "Người dùng"}
-                                        </span>
-                                        <span className="text-xs text-gray-400">
-                                            {items?.createdAt}
-                                        </span>
-                                    </div>
-                                    {
-                                        items?.type === "comment" ?
-                                            <div>
-                                                <p className="mt-1 text-sm text-gray-700 whitespace-pre-wrap wrap-break-words">
-                                                    {items?.content}
-                                                </p>
+            {
+                taskId && (
+                    <div className="flex flex-col gap-1 mt-2.5 overflow-y-auto scrollbar-hide"
+                        style={{ maxHeight: "60vh" }}
+                        onScroll={handleScroll}>
+                        {
+                            dataComment?.map((items, index) => {
+                                const checkFile = items?.file_url?.split("/")
+                                return (
+                                    <div
+                                        key={index}
+                                        className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm hover:shadow-md transition-shadow"
+                                    >
+                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-500 text-sm font-semibold text-white"
+                                            style={{ backgroundImage: `url(${items?.users?.avatar_url})`, backgroundRepeat: "no-repeat", backgroundSize: "100% 100%" }}>
+                                            {items?.users?.full_name.charAt(0)?.toUpperCase() ?? "U"}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm font-semibold text-gray-800">
+                                                    {items?.users?.full_name ?? "Người dùng"}
+                                                </span>
+                                                <span className="text-xs text-gray-400">
+                                                    {items?.createdAt}
+                                                </span>
                                             </div>
-                                            :
-                                            <div>
-                                                {
-                                                    checkFile !== undefined && checkFile[4] === "raw" && (
-                                                        <a
-                                                            href={items.file_url}
-                                                            download={items.file_name}
-                                                            className="min-w-0 truncate text-sm text-gray-700 hover:underline"
-                                                            title={items.file_name}
-                                                        >
-                                                            <div className="flex w-fit max-w-87.5 items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-1.5">
-                                                                <svg
-                                                                    width="16"
-                                                                    height="16"
-                                                                    viewBox="0 0 24 24"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    strokeWidth="2"
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
-                                                                    className="shrink-0 text-gray-600"
-                                                                >
-                                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                                    <polyline points="14 2 14 8 20 8" />
-                                                                </svg>
-
-                                                                <span
-                                                                    className="min-w-0 truncate text-sm text-gray-700"
+                                            {
+                                                items?.type === "comment" ?
+                                                    <div>
+                                                        <p className="mt-1 text-sm text-gray-700 whitespace-pre-wrap wrap-break-words">
+                                                            {items?.content}
+                                                        </p>
+                                                    </div>
+                                                    :
+                                                    <div>
+                                                        {
+                                                            checkFile !== undefined && checkFile[4] === "raw" && (
+                                                                <a
+                                                                    href={items.file_url}
+                                                                    download={items.file_name}
+                                                                    className="min-w-0 truncate text-sm text-gray-700 hover:underline"
                                                                     title={items.file_name}
                                                                 >
-                                                                    {items.file_name}
-                                                                </span>
-                                                                <span className="shrink-0 text-sm text-gray-400">
-                                                                    {(items.size_bytes / 1024).toFixed(1)} KB
-                                                                </span>
+                                                                    <div className="flex w-fit max-w-87.5 items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-1.5">
+                                                                        <svg
+                                                                            width="16"
+                                                                            height="16"
+                                                                            viewBox="0 0 24 24"
+                                                                            fill="none"
+                                                                            stroke="currentColor"
+                                                                            strokeWidth="2"
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                            className="shrink-0 text-gray-600"
+                                                                        >
+                                                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                                            <polyline points="14 2 14 8 20 8" />
+                                                                        </svg>
 
-                                                            </div>
-                                                        </a>
+                                                                        <span
+                                                                            className="min-w-0 truncate text-sm text-gray-700"
+                                                                            title={items.file_name}
+                                                                        >
+                                                                            {items.file_name}
+                                                                        </span>
+                                                                        <span className="shrink-0 text-sm text-gray-400">
+                                                                            {(items.size_bytes / 1024).toFixed(1)} KB
+                                                                        </span>
 
-                                                    )
-                                                }
-                                                {
-                                                    checkFile !== undefined && checkFile[4] === "image" && (
-                                                        <img
-                                                            src={items.file_url}
-                                                            alt="Preview"
-                                                            className="mt-2 max-h-75 max-w-full rounded-lg object-contain"
-                                                        />
-                                                    )
-                                                }
+                                                                    </div>
+                                                                </a>
 
-                                            </div>
-                                    }
+                                                            )
+                                                        }
+                                                        {
+                                                            checkFile !== undefined && checkFile[4] === "image" && (
+                                                                <img
+                                                                    src={items.file_url}
+                                                                    alt="Preview"
+                                                                    className="mt-2 max-h-75 max-w-full rounded-lg object-contain"
+                                                                />
+                                                            )
+                                                        }
 
-                                </div>
-                            </div>
-                        )
-                    })
-                }
-            </div>
+                                                    </div>
+                                            }
+
+                                        </div>
+                                    </div>
+                                )
+                            })
+                        }
+                    </div>
+                )
+            }
+
         </>
 
 

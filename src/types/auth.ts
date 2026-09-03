@@ -5,10 +5,6 @@ export interface LoginRequest {
   password: string;
 }
 
-/**
- * User rút gọn trả về từ /auth/login và /auth/me.
- * (Backend đã bổ sung `roles` vào cả hai response.)
- */
 export interface AuthUser {
   id: string;
   username: string;

@@ -3,9 +3,6 @@ import { authApi } from '@/api/auth.api';
 import { hasRole as hasRoleFn, useAuthStore } from '@/stores/auth.store';
 import type { RoleCode } from '@/types/user';
 
-/**
- * Truy cập trạng thái phiên đăng nhập trong component.
- */
 export function useAuth() {
   const user = useAuthStore((s) => s.user);
   const status = useAuthStore((s) => s.status);
@@ -19,10 +16,6 @@ export function useAuth() {
   };
 }
 
-/**
- * Xác thực lại phiên đã lưu khi app khởi động (gọi /auth/me).
- * Gắn một lần ở component gốc.
- */
 export function useBootstrapAuth() {
   const status = useAuthStore((s) => s.status);
   const started = useRef(false);

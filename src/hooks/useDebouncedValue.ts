@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 
-/** Trả về giá trị sau khi ngừng thay đổi `delay` ms. */
 export function useDebouncedValue<T>(value: T, delay = 400): T {
   const [debounced, setDebounced] = useState(value);
 

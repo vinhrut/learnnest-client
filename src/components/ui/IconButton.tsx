@@ -9,7 +9,6 @@ const SIZE: Record<Size, string> = {
 };
 
 interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /** Bắt buộc để có `aria-label` + tooltip cho nút chỉ có icon. */
   label: string;
   icon?: ReactNode;
   size?: Size;
@@ -17,9 +16,6 @@ interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   bordered?: boolean;
 }
 
-/**
- * Nút vuông chỉ chứa icon, dùng chung cho topbar / hàng thao tác / phân trang.
- */
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
   function IconButton(
     { label, icon, size = 'sm', danger, bordered, className, children, ...props },

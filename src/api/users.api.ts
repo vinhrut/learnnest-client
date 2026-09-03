@@ -31,7 +31,6 @@ export const usersApi = {
     api.patch<User>(`/users/${id}/unlock`).then((r) => r.data),
 };
 
-/** Bỏ các field rỗng để URL query gọn. */
 function cleanQuery(query: UserListQuery): Record<string, unknown> {
   return Object.fromEntries(
     Object.entries(query).filter(
