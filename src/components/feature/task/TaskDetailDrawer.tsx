@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { Badge as StatusChip } from '@/components/ui/Badge';
+import { ExtensionRequestBanner } from './ExtensionRequestBanner';
+import { ExtensionRequestModal } from './ExtensionRequestModal';
 import { useAuth } from '@/hooks/useAuth';
 import {
   useSubmitTask,
@@ -16,6 +19,10 @@ import {
   useUpdateTask,
   useUpdateTaskStatus,
   useDeleteTask,
+  useTaskExtensionsQuery,
+  useRequestExtension,
+  useApproveExtension,
+  useRejectExtension,
 } from '@/hooks/tasks/task.queries';
 import { useProjectMembersQuery } from '@/hooks/projects/project.queries';
 import {
@@ -25,10 +32,11 @@ import {
   canDeleteTask,
   canEditTask,
   canMoveTask,
+  canRequestExtension,
   canSubmitTask,
 } from '@/lib/permissions';
 import type { Task, TaskStatus } from '@/types/task';
-import { TASK_STATUS_CONFIG, PRIORITY_CONFIG, APPROVAL_STATUS_CONFIG, TASK_STATUS_LABEL } from '@/types/task';
+import { TASK_STATUS_CONFIG, PRIORITY_CONFIG, APPROVAL_STATUS_CONFIG, TASK_STATUS_LABEL, EXTENSION_STATUS_LABEL } from '@/types/task';
 
 interface TaskDetailDrawerProps {
   task: Task | null;
@@ -47,6 +55,13 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
   const updateTask = useUpdateTask();
   const updateStatus = useUpdateTaskStatus();
   const deleteTask = useDeleteTask();
+  const requestExtension = useRequestExtension();
+  const approveExtension = useApproveExtension();
+  const rejectExtension = useRejectExtension();
+
+  const { data: extensionRequests } = useTaskExtensionsQuery(
+    open ? task?.id : undefined,
+  );
 
   const canAssign = canAssignTask(user);
   const { data: members } = useProjectMembersQuery(
@@ -57,8 +72,13 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [showExtensionModal, setShowExtensionModal] = useState(false);
 
   if (!task) return null;
+
+  const extensions = extensionRequests ?? [];
+  const pendingExtension = extensions.find((item) => item.status === 'PENDING') ?? null;
+  const reviewedExtensions = extensions.filter((item) => item.status !== 'PENDING');
 
   const priorityConfig = PRIORITY_CONFIG[task.priority];
   const statusConfig = TASK_STATUS_CONFIG[task.status];
@@ -125,6 +145,40 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
         onClose();
       },
     });
+  };
+
+  const handleRequestExtension = (payload: {
+    requested_due_date: string;
+    reason: string;
+  }) => {
+    requestExtension.mutate(
+      { task_id: task.id, ...payload },
+      {
+        onSuccess: () => {
+          setShowExtensionModal(false);
+          onRefresh?.();
+        },
+      },
+    );
+  };
+
+  const handleApproveExtension = () => {
+    if (!pendingExtension) return;
+    approveExtension.mutate(
+      { taskId: task.id, payload: { request_id: pendingExtension.id } },
+      { onSuccess: () => onRefresh?.() },
+    );
+  };
+
+  const handleRejectExtension = (reason: string) => {
+    if (!pendingExtension) return;
+    rejectExtension.mutate(
+      {
+        taskId: task.id,
+        payload: { request_id: pendingExtension.id, reason: reason || undefined },
+      },
+      { onSuccess: () => onRefresh?.() },
+    );
   };
 
   const tabs = [
@@ -225,6 +279,18 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
         );
       });
 
+    if (canRequestExtension(user, task, pendingExtension)) {
+      buttons.push(
+        <Button
+          key="request-extension"
+          variant="secondary"
+          onClick={() => setShowExtensionModal(true)}
+        >
+          Xin gia hạn
+        </Button>
+      );
+    }
+
     if (canApproveTask(user, task)) {
       buttons.push(
         <Button key="reject" variant="danger" onClick={() => setShowRejectDialog(true)}>
@@ -270,6 +336,16 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
         position="right"
       >
         <div className="space-y-6">
+          {pendingExtension && (
+            <ExtensionRequestBanner
+              request={pendingExtension}
+              onApprove={handleApproveExtension}
+              onReject={handleRejectExtension}
+              approving={approveExtension.isPending}
+              rejecting={rejectExtension.isPending}
+            />
+          )}
+
           <div className="space-y-4 border-b border-outline-variant pb-6">
             <div className="flex items-center gap-3 flex-wrap">
               <Badge tone="neutral">{task.code}</Badge>
@@ -430,6 +506,42 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
               </div>
             </section>
 
+            {reviewedExtensions.length > 0 && (
+              <section>
+                <h3 className="mb-3 flex items-center gap-2 text-body-lg text-on-surface font-semibold">
+                  <FiClock className="text-on-surface-variant" />
+                  Lịch sử gia hạn
+                </h3>
+                <ul className="space-y-2">
+                  {reviewedExtensions.map((item) => (
+                    <li
+                      key={item.id}
+                      className="rounded-xl border border-outline-variant bg-surface p-3"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <StatusChip
+                          tone={item.status === 'APPROVED' ? 'success' : 'danger'}
+                        >
+                          {EXTENSION_STATUS_LABEL[item.status]}
+                        </StatusChip>
+                        <span className="text-body-md text-on-surface">
+                          {new Date(item.requested_due_date).toLocaleDateString('vi-VN')}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-body-md text-on-surface-variant">
+                        {item.reason}
+                      </p>
+                      {item.reject_reason && (
+                        <p className="mt-1 text-label-md text-error">
+                          Lý do từ chối: {item.reject_reason}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             <section>
               <Tabs tabs={tabs} />
             </section>
@@ -472,6 +584,16 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
           </div>
         </div>
       </Modal>
+
+      {showExtensionModal && (
+        <ExtensionRequestModal
+          open
+          onClose={() => setShowExtensionModal(false)}
+          onSubmit={handleRequestExtension}
+          task={task}
+          loading={requestExtension.isPending}
+        />
+      )}
 
       <ConfirmDialog
         open={showDeleteDialog}

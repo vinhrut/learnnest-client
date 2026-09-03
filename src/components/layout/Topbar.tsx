@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { FiBell, FiLogOut, FiMenu, FiSearch, FiUser } from 'react-icons/fi';
+import { FiLogOut, FiMenu, FiSearch, FiUser } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
+import { NotificationBell } from '@/features/notifications/NotificationBell';
 import { useAuth } from '@/hooks/useAuth';
 import { useLogoutMutation } from '@/hooks/auth/auth.queries';
 import { useMyProfileQuery } from '@/hooks/profile/profile.queries';
@@ -63,10 +64,7 @@ export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
       </div>
 
       <div className="flex items-center gap-2">
-        <button className="text-on-surface-variant hover:bg-surface-container-high rounded-full p-2 transition-transform duration-150 active:scale-90 relative">
-          <FiBell className="text-2xl" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border border-surface-container-lowest"></span>
-        </button>
+        <NotificationBell />
 
         <div className="relative" ref={menuRef}>
           <button

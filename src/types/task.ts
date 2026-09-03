@@ -27,6 +27,38 @@ export interface Task {
   creator?: TaskCreator;
   project?: TaskProject;
   rejection_reason?: string | null;
+  pending_extension_request?: TaskExtensionRequest | null;
+}
+
+export type ExtensionStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface TaskExtensionRequest {
+  id: string;
+  task_id: string;
+  current_due_date: string | null;
+  requested_due_date: string;
+  reason: string;
+  status: ExtensionStatus;
+  requested_at: string;
+  reviewed_at: string | null;
+  reject_reason: string | null;
+  requester?: TaskAssignee;
+  reviewer?: TaskAssignee | null;
+}
+
+export interface CreateExtensionRequest {
+  task_id: string;
+  requested_due_date: string;
+  reason: string;
+}
+
+export interface ApproveExtensionRequest {
+  request_id: string;
+}
+
+export interface RejectExtensionRequest {
+  request_id: string;
+  reason?: string;
 }
 
 export interface TaskAssignee {
@@ -231,6 +263,12 @@ export const PRIORITY_CONFIG: Record<
     bgColor: 'bg-error',
     icon: FiAlertOctagon,
   },
+};
+
+export const EXTENSION_STATUS_LABEL: Record<ExtensionStatus, string> = {
+  PENDING: 'Chờ duyệt',
+  APPROVED: 'Đã duyệt',
+  REJECTED: 'Bị từ chối',
 };
 
 export const APPROVAL_STATUS_LABEL: Record<ApprovalStatus, string> = {

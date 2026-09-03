@@ -5,7 +5,10 @@ export type NotificationType =
   | 'APPROVAL_REJECTED'
   | 'STATUS_CHANGED'
   | 'TASK_DUE'
-  | 'SYSTEM';
+  | 'SYSTEM'
+  | 'DEADLINE_EXTENSION_REQUEST'
+  | 'DEADLINE_EXTENSION_APPROVED'
+  | 'DEADLINE_EXTENSION_REJECTED';
 
 export interface NotificationItem {
   id: string;
