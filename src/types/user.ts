@@ -31,11 +31,15 @@ export interface User {
   deleted_at: string | null;
 }
 
+export type SortOrder = 'asc' | 'desc';
+
 export interface UserListQuery {
   page?: number;
   limit?: number;
   search?: string;
   status?: UserStatus;
+  role?: RoleCode;
+  order?: SortOrder;
 }
 
 export interface CreateUserRequest {

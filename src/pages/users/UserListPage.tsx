@@ -7,13 +7,14 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuth } from '@/hooks/useAuth';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useUsersQuery } from '@/hooks/users/users.queries';
-import type { User, UserStatus } from '@/types/user';
+import type { RoleCode, SortOrder, User, UserStatus } from '@/types/user';
 import { UserDetailModal } from '@/components/feature/users/UserDetailModal';
 import { UserFilters } from '@/components/feature/users/UserFilters';
 import { UserFormModal } from '@/components/feature/users/UserFormModal';
 import { UserTable } from '@/components/feature/users/UserTable';
 
 const LIMIT = 10;
+const MIN_SEARCH_LEN = 2;
 
 export function UserListPage() {
   const { user: currentUser } = useAuth();
@@ -21,10 +22,16 @@ export function UserListPage() {
 
   const page = Number(params.get('page')) || 1;
   const status = (params.get('status') as UserStatus | null) ?? '';
+  const role = (params.get('role') as RoleCode | null) ?? '';
+  const order: SortOrder = params.get('order') === 'asc' ? 'asc' : 'desc';
   const urlSearch = params.get('q') ?? '';
 
   const [searchInput, setSearchInput] = useState(urlSearch);
   const debouncedSearch = useDebouncedValue(searchInput, 400);
+  // Gộp khoảng trắng thừa: "mai   dieu" -> "mai dieu".
+  const normalizedSearch = debouncedSearch.replace(/\s+/g, ' ').trim();
+  const effectiveSearch =
+    normalizedSearch.length >= MIN_SEARCH_LEN ? normalizedSearch : '';
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
@@ -41,15 +48,24 @@ export function UserListPage() {
     );
   };
 
+  // Đồng bộ ô tìm kiếm -> URL sau khi debounce.
   useEffect(() => {
-    if (debouncedSearch === urlSearch) return;
+    if (effectiveSearch === urlSearch) return;
     patchParams((p) => {
-      if (debouncedSearch) p.set('q', debouncedSearch);
+      if (effectiveSearch) p.set('q', effectiveSearch);
       else p.delete('q');
       p.delete('page');
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch]);
+  }, [effectiveSearch]);
+
+  // Đồng bộ URL -> ô tìm kiếm khi người dùng bấm back/forward hoặc bấm "Làm mới".
+  // Điều chỉnh state ngay trong render (pattern khuyến nghị của React) thay vì effect.
+  const [lastUrlSearch, setLastUrlSearch] = useState(urlSearch);
+  if (urlSearch !== lastUrlSearch) {
+    setLastUrlSearch(urlSearch);
+    if (urlSearch !== effectiveSearch) setSearchInput(urlSearch);
+  }
 
   const handleStatusChange = (value: UserStatus | '') => {
     patchParams((p) => {
@@ -57,6 +73,28 @@ export function UserListPage() {
       else p.delete('status');
       p.delete('page');
     });
+  };
+
+  const handleRoleChange = (value: RoleCode | '') => {
+    patchParams((p) => {
+      if (value) p.set('role', value);
+      else p.delete('role');
+      p.delete('page');
+    });
+  };
+
+  const handleSortChange = () => {
+    patchParams((p) => {
+      const next = order === 'asc' ? 'desc' : 'asc';
+      if (next === 'asc') p.set('order', 'asc');
+      else p.delete('order');
+      p.delete('page');
+    });
+  };
+
+  const handleReset = () => {
+    setSearchInput('');
+    setParams({}, { replace: true });
   };
 
   const handlePageChange = (next: number) => {
@@ -69,8 +107,10 @@ export function UserListPage() {
   const query = useUsersQuery({
     page,
     limit: LIMIT,
-    search: debouncedSearch || undefined,
+    search: effectiveSearch || undefined,
     status: status || undefined,
+    role: role || undefined,
+    order,
   });
 
   const openCreate = () => {
@@ -85,6 +125,10 @@ export function UserListPage() {
 
   const users = query.data?.data ?? [];
   const meta = query.data?.meta;
+
+  const hasActiveFilters = Boolean(
+    urlSearch || status || role || params.get('order') || searchInput,
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -101,8 +145,13 @@ export function UserListPage() {
       <UserFilters
         search={searchInput}
         status={status}
+        role={role}
+        searching={query.isFetching}
+        hasActiveFilters={hasActiveFilters}
         onSearchChange={setSearchInput}
         onStatusChange={handleStatusChange}
+        onRoleChange={handleRoleChange}
+        onReset={handleReset}
       />
 
       <div className="overflow-hidden rounded-xl">
@@ -110,10 +159,12 @@ export function UserListPage() {
           users={users}
           loading={query.isFetching}
           currentUserId={currentUser?.id}
+          sortDir={order}
+          onSortChange={handleSortChange}
           onView={(u) => setDetailId(u.id)}
           onEdit={openEdit}
         />
-        {meta && meta.total > 0 && (
+        {meta && (
           <div className="border border-t-0 border-line bg-white">
             <Pagination
               page={meta.page}
