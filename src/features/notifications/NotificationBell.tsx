@@ -58,7 +58,13 @@ export function NotificationBell() {
   const handleItemClick = (item: NotificationItem) => {
     if (!item.is_read) markRead.mutate(item.id);
     setOpen(false);
-    navigate(notificationTargetPath(user, item.task_id));
+    navigate(
+      notificationTargetPath(user, {
+        type: item.type,
+        taskId: item.task_id,
+        projectId: item.project_id,
+      }),
+    );
   };
 
   return (

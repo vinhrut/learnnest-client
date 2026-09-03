@@ -322,6 +322,7 @@ export interface RealtimeNotification {
   title: string;
   message: string | null;
   taskId: string | null;
+  projectId?: string | null;
   priority: TaskPriority | null;
   dueDate: string | null;
   createdAt: string;

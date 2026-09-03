@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { FiLogOut, FiMenu, FiSearch, FiUser } from 'react-icons/fi';
+import { FiLogOut, FiMenu, FiUser } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
 import { NotificationBell } from '@/features/notifications/NotificationBell';
 import { useAuth } from '@/hooks/useAuth';
 import { useLogoutMutation } from '@/hooks/auth/auth.queries';
 import { useMyProfileQuery } from '@/hooks/profile/profile.queries';
+import { profilePathForUser } from '@/routes/roleHome';
 import { ROLE_LABEL } from '@/types/user';
 
 export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
@@ -51,14 +52,14 @@ export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
           <FiMenu />
         </button>
 
-        <div className="relative w-full max-w-md hidden md:block">
+        {/* <div className="relative w-full max-w-md hidden md:block">
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl" />
           <input
             className="w-full h-8 pl-10 pr-4 rounded-full bg-surface border border-outline-variant text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
             placeholder="Tìm kiếm công việc..."
             type="text"
           />
-        </div>
+        </div> */}
 
         <h1 className="md:hidden text-headline-sm font-bold text-primary">TaskMaster</h1>
       </div>
@@ -93,7 +94,7 @@ export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
               </div>
 
               <Link
-                to="/profile"
+                to={profilePathForUser(user)}
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-3 px-4 py-3 text-body-md text-on-surface hover:bg-surface-container transition-colors"
                 role="menuitem"

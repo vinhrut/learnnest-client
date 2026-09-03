@@ -26,7 +26,13 @@ export function useRealtimeNotifications() {
   useEffect(() => {
     openNotificationRef.current = (payload) => {
       markRead.mutate(payload.id);
-      navigate(notificationTargetPath(user, payload.taskId));
+      navigate(
+        notificationTargetPath(user, {
+          type: payload.type,
+          taskId: payload.taskId,
+          projectId: payload.projectId,
+        }),
+      );
     };
   });
 

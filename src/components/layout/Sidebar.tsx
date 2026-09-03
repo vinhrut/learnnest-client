@@ -14,6 +14,7 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { label: 'Quản lý người dùng', to: '/admin/users', icon: FiUsers, roles: ['ADMIN'] },
+  { label: 'Hồ sơ', to: '/admin/profile', icon: FiUsers, roles: ['ADMIN'] },
 
   { label: 'Tổng quan', to: '/leader/dashboard', icon: FiGrid, roles: ['LEAD'] },
   { label: 'Dự án', to: '/leader/projects', icon: FiFolder, roles: ['LEAD'] },
