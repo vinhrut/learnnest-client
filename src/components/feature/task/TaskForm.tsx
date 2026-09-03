@@ -27,7 +27,10 @@ export function TaskForm({ open, onClose, onSubmit, task, loading, projectId }: 
   const [priority, setPriority] = useState<TaskPriority>('MEDIUM');
   const [dueDate, setDueDate] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
-  const [errors, setErrors] = useState<{ title?: string }>({});
+  const [errors, setErrors] = useState<{ title?: string; dueDate?: string }>({});
+
+  // Get today's date in YYYY-MM-DD format for min validation
+  const today = new Date().toISOString().split('T')[0];
 
   const canAssign = canAssignTask(user);
   const { data: members } = useProjectMembersQuery(
@@ -62,8 +65,19 @@ export function TaskForm({ open, onClose, onSubmit, task, loading, projectId }: 
   };
 
   const handleSubmit = () => {
+    const newErrors: { title?: string; dueDate?: string } = {};
+
     if (!title.trim()) {
-      setErrors({ title: 'Tiêu đề là bắt buộc' });
+      newErrors.title = 'Tiêu đề là bắt buộc';
+    }
+
+    // Validate due date is not in the past
+    if (dueDate && dueDate < today) {
+      newErrors.dueDate = 'Ngày hạn chót không được nhỏ hơn ngày hiện tại';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -137,7 +151,12 @@ export function TaskForm({ open, onClose, onSubmit, task, loading, projectId }: 
           label="Hạn chót"
           type="date"
           value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
+          min={today}
+          onChange={(e) => {
+            setDueDate(e.target.value);
+            if (errors.dueDate) setErrors((prev) => ({ ...prev, dueDate: undefined }));
+          }}
+          error={errors.dueDate}
         />
 
         {canAssign && (
@@ -146,6 +165,7 @@ export function TaskForm({ open, onClose, onSubmit, task, loading, projectId }: 
             hint="Để trống nếu chưa giao cho ai."
             value={assigneeId}
             onChange={(e) => setAssigneeId(e.target.value)}
+            onClear={() => setAssigneeId('')}
             options={[
               { value: '', label: 'Chưa giao' },
               ...(members ?? []).map((member) => ({

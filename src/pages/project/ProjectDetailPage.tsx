@@ -144,9 +144,9 @@ export function ProjectDetailPage() {
           </Button>
         }
       />
-
-      <div className="mb-6 rounded-xl border border-line bg-white p-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="flex gap-6">
+      <div className="w-full mb-6 rounded-xl border border-line bg-white p-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
           <div>
             <p className="mb-1 text-xs font-medium text-muted">Trạng thái</p>
             <span className={`inline-flex items-center rounded px-2 py-1 text-xs font-semibold ${PROJECT_STATUS_COLOR[project.status]}`}>
@@ -179,7 +179,7 @@ export function ProjectDetailPage() {
         )}
       </div>
 
-      <div className="mb-6 rounded-xl border border-line bg-white p-6">
+      <div className="w-1/2 mb-6 rounded-xl border border-line bg-white p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-ink">Thành viên</h2>
           {isOwner && (
@@ -243,6 +243,7 @@ export function ProjectDetailPage() {
         ) : (
           <p className="text-center text-muted">Chưa có thành viên nào</p>
         )}
+      </div>        
       </div>
 
       <div className="rounded-xl border border-line bg-white p-6">
