@@ -260,7 +260,7 @@ export const PRIORITY_CONFIG: Record<
   URGENT: {
     label: 'Khẩn cấp',
     color: 'text-danger',
-    bgColor: 'bg-error',
+    bgColor: 'bg-red-soft',
     icon: FiAlertOctagon,
   },
 };

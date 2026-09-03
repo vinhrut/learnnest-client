@@ -13,10 +13,10 @@ import type {
 
 export const projectKeys = {
   all: ['projects'] as const,
-  list: () => ['projects', 'list'] as const,
-  detail: (id: string) => ['projects', 'detail', id] as const,
-  members: (projectId: string) => ['projects', 'members', projectId] as const,
-  availableUsers: (projectId: string) => ['projects', 'available', projectId] as const,
+  list: () => [...projectKeys.all, 'list'] as const,
+  detail: (id: string) => [...projectKeys.all, 'detail', id] as const,
+  members: (projectId: string) => [...projectKeys.all, 'members', projectId] as const,
+  availableUsers: (projectId: string) => [...projectKeys.all, 'available', projectId] as const,
 };
 
 export function useProjectsQuery() {
