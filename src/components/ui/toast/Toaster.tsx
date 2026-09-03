@@ -38,18 +38,41 @@ export function Toaster() {
     <div className="fixed right-4 top-4 z-[60] flex w-80 flex-col gap-2">
       {toasts.map((t) => {
         const Icon = ICON[t.type];
+        const handleActivate = t.onClick
+          ? () => {
+              t.onClick?.();
+              dismiss(t.id);
+            }
+          : undefined;
         return (
           <div
             key={t.id}
             className={cn(
               'flex items-start gap-3 rounded-lg border border-line border-l-4 bg-white p-3 shadow-lg',
               TONE[t.type],
+              handleActivate && 'cursor-pointer hover:bg-canvas',
             )}
+            role={handleActivate ? 'button' : undefined}
+            tabIndex={handleActivate ? 0 : undefined}
+            onClick={handleActivate}
+            onKeyDown={
+              handleActivate
+                ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleActivate();
+                    }
+                  }
+                : undefined
+            }
           >
             <Icon className={cn('mt-0.5 h-4 w-4 shrink-0', ICON_COLOR[t.type])} />
             <p className="flex-1 text-sm text-ink">{t.message}</p>
             <button
-              onClick={() => dismiss(t.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                dismiss(t.id);
+              }}
               className="text-muted hover:text-ink"
               aria-label="Đóng thông báo"
             >

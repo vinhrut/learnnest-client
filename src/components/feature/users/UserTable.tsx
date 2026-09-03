@@ -1,5 +1,5 @@
 import { Avatar } from '@/components/ui/Avatar';
-import { Table, type Column } from '@/components/ui/Table';
+import { Table, type Column, type SortDir } from '@/components/ui/Table';
 import { EmptyState } from '@/components/ui/EmptyState';
 import type { User } from '@/types/user';
 import { RoleTags } from './RoleTags';
@@ -18,12 +18,16 @@ export function UserTable({
   users,
   loading,
   currentUserId,
+  sortDir,
+  onSortChange,
   onView,
   onEdit,
 }: {
   users: User[];
   loading: boolean;
   currentUserId: string | undefined;
+  sortDir?: SortDir;
+  onSortChange?: (key: string) => void;
   onView: (user: User) => void;
   onEdit: (user: User) => void;
 }) {
@@ -68,6 +72,7 @@ export function UserTable({
       key: 'created_at',
       header: 'Ngày tạo',
       className: 'hidden lg:table-cell',
+      sortable: true,
       render: (u) => (
         <span className="text-muted">{formatDate(u.created_at)}</span>
       ),
@@ -93,10 +98,14 @@ export function UserTable({
       rows={users}
       rowKey={(u) => u.id}
       loading={loading}
+      sortKey="created_at"
+      sortDir={sortDir}
+      onSortChange={onSortChange}
+      minBodyHeight={560}
       emptyState={
         <EmptyState
           title="Không có người dùng"
-          description="Thử đổi từ khoá tìm kiếm hoặc bộ lọc trạng thái."
+          description="Thử đổi từ khoá tìm kiếm hoặc bộ lọc."
         />
       }
     />

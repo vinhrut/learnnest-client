@@ -103,6 +103,15 @@ export function TaskCard({
         </div>
       )}
 
+      {task.pending_extension_request && (
+        <div className="mb-3">
+          <span className="inline-flex items-center gap-1 rounded bg-warning-soft px-1.5 py-0.5 text-label-md font-semibold text-warning">
+            <FiClock className="text-base" />
+            Chờ gia hạn
+          </span>
+        </div>
+      )}
+
       <div className="flex items-center justify-between border-t border-outline-variant pt-2">
         <span className="font-mono text-mono-sm text-on-surface-variant">{task.code}</span>
         {task.assignee && (

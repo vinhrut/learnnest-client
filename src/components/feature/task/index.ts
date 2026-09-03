@@ -4,3 +4,6 @@ export { KanbanBoard } from './KanbanBoard';
 export { TaskDetailDrawer } from './TaskDetailDrawer';
 export { TaskPriorityBadge } from './TaskPriorityBadge';
 export { TaskForm } from './TaskForm';
+export { TaskStatusBadge } from './TaskStatusBadge';
+export { ExtensionRequestBanner } from './ExtensionRequestBanner';
+export { ExtensionRequestModal } from './ExtensionRequestModal';

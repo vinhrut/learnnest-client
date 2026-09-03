@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FiColumns, FiList } from 'react-icons/fi';
 import { KanbanBoard, TaskDetailDrawer, TaskForm } from '@/components/feature/task';
 import { useTasksQuery, useUpdateTask, useUpdateTaskStatus } from '@/hooks/tasks/task.queries';
+import { useTaskDeepLink } from '@/hooks/tasks/useTaskDeepLink';
 import { useAuth } from '@/hooks/useAuth';
 import { canMoveTask } from '@/lib/permissions';
 import type { Task, TaskStatus, CreateTaskRequest, UpdateTaskRequest } from '@/types/task';
@@ -18,6 +19,8 @@ export function TaskPage() {
   const updateTaskStatus = useUpdateTaskStatus();
 
   const displayTasks = tasksData ?? [];
+
+  const { clearTaskParam } = useTaskDeepLink(displayTasks, setSelectedTask, setDrawerOpen);
 
   const handleFormSubmit = (data: CreateTaskRequest | UpdateTaskRequest) => {
     if (!editingTask) return;
@@ -79,7 +82,10 @@ export function TaskPage() {
       <TaskDetailDrawer
         task={selectedTask}
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        onClose={() => {
+          setDrawerOpen(false);
+          clearTaskParam();
+        }}
         onEdit={(task) => {
           setEditingTask(task);
           setFormOpen(true);

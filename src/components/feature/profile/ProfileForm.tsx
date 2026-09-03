@@ -1,5 +1,4 @@
 import { useState, type FormEvent } from 'react';
-import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -11,28 +10,37 @@ import type { User } from '@/types/user';
 interface FormState {
   full_name: string;
   phone: string;
-  avatar_url: string;
+  /**
+   * `null` = người dùng chưa gõ vào ô URL, nên ô này bám theo giá trị từ server.
+   * Nhờ vậy khi tải lên / xoá ảnh ở ProfileHero, form không giữ lại URL cũ rồi
+   * ghi đè ngược ở lần lưu sau.
+   */
+  avatar_draft: string | null;
 }
 
 function initial(user: User): FormState {
   return {
     full_name: user.full_name ?? '',
     phone: user.phone ?? '',
-    avatar_url: user.avatar_url ?? '',
+    avatar_draft: null,
   };
 }
 
 export function ProfileForm({ user }: { user: User }) {
   const update = useUpdateMyProfile();
+
   const [form, setForm] = useState<FormState>(() => initial(user));
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
 
+  const serverAvatar = user.avatar_url ?? '';
+  const avatarUrl = form.avatar_draft ?? serverAvatar;
+
   const dirty =
     form.full_name !== (user.full_name ?? '') ||
     form.phone !== (user.phone ?? '') ||
-    form.avatar_url !== (user.avatar_url ?? '');
+    avatarUrl !== serverAvatar;
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -41,17 +49,20 @@ export function ProfileForm({ user }: { user: User }) {
       {
         full_name: form.full_name.trim() || undefined,
         phone: form.phone.trim() || undefined,
-        avatar_url: form.avatar_url.trim() || undefined,
+        avatar_url: avatarUrl.trim() || undefined,
       },
       {
-        onSuccess: () => toast.success('Đã cập nhật hồ sơ'),
+        onSuccess: () => {
+          setForm((f) => ({ ...f, avatar_draft: null }));
+          toast.success('Đã cập nhật hồ sơ');
+        },
         onError: (err) => errorMessages(err).forEach((m) => toast.error(m)),
       },
     );
   };
 
   return (
-    <Card title="Thông tin cá nhân">
+    <Card>
       <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
         <div className="grid gap-4 sm:grid-cols-2">
           <Input
@@ -76,24 +87,15 @@ export function ProfileForm({ user }: { user: User }) {
           />
         </div>
 
-        <div className="flex items-end gap-3">
-          <div className="flex-1">
-            <Input
-              label="Ảnh đại diện (URL)"
-              placeholder="https://..."
-              value={form.avatar_url}
-              onChange={(e) => set('avatar_url', e.target.value)}
-            />
-          </div>
-          <Avatar
-            src={form.avatar_url || null}
-            name={form.full_name || user.username}
-            size="lg"
-            className="mb-1"
-          />
-        </div>
+        <Input
+          label="Ảnh đại diện (URL)"
+          placeholder="https://..."
+          hint="Hoặc dán trực tiếp đường dẫn ảnh có sẵn"
+          value={avatarUrl}
+          onChange={(e) => set('avatar_draft', e.target.value)}
+        />
 
-        <div className="flex justify-end gap-2 border-t border-line pt-4">
+        <div className="flex justify-end gap-2 border-t border-outline-variant pt-4">
           <Button
             variant="secondary"
             onClick={() => setForm(initial(user))}

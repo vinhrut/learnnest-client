@@ -14,6 +14,7 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { label: 'Quản lý người dùng', to: '/admin/users', icon: FiUsers, roles: ['ADMIN'] },
+  { label: 'Hồ sơ', to: '/admin/profile', icon: FiUsers, roles: ['ADMIN'] },
 
   { label: 'Tổng quan', to: '/leader/dashboard', icon: FiGrid, roles: ['LEAD'] },
   { label: 'Dự án', to: '/leader/projects', icon: FiFolder, roles: ['LEAD'] },
@@ -36,9 +37,17 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+const ROLE_PRIORITY: RoleCode[] = ['ADMIN', 'LEAD', 'BA', 'USER'];
+
+function getPrimaryRole(userRoles: RoleCode[] | undefined): RoleCode | null {
+  if (!userRoles?.length) return null;
+  return ROLE_PRIORITY.find((r) => userRoles.includes(r)) ?? null;
+}
+
 export function Sidebar({ open, onClose }: SidebarProps) {
-  const { hasRole } = useAuth();
-  const items = NAV.filter((i) => !i.roles || hasRole(...i.roles));
+  const { user } = useAuth();
+  const primaryRole = getPrimaryRole(user?.roles);
+  const items = NAV.filter((i) => !i.roles || (primaryRole && i.roles.includes(primaryRole)));
 
   return (
     <>
