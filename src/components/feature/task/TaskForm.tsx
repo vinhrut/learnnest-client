@@ -1,5 +1,5 @@
-/* eslint-disable react-hooks/set-state-in-render */
-import { useState, useEffect } from 'react';
+ 
+import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
@@ -37,22 +37,20 @@ export function TaskForm({ open, onClose, onSubmit, task, loading, projectId }: 
     canAssign && open ? projectId : undefined,
   );
 
-  useEffect(() => {
-    if (task) {
-      setTitle(task.title);
-      setDescription(task.description ?? '');
-      setPriority(task.priority);
-      setDueDate(task.due_date ? task.due_date.split('T')[0] : '');
-      setAssigneeId(task.assignee_id ?? '');
-    } else {
-      setTitle('');
-      setDescription('');
-      setPriority('MEDIUM');
-      setDueDate('');
-      setAssigneeId('');
-    }
+  // Reset form fields whenever the modal opens or the edited task changes
+  // (render-phase sync instead of an effect).
+  const formKey = open ? (task?.id ?? 'new') : null;
+  const [syncedFormKey, setSyncedFormKey] = useState(formKey);
+
+  if (formKey !== syncedFormKey) {
+    setSyncedFormKey(formKey);
+    setTitle(task?.title ?? '');
+    setDescription(task?.description ?? '');
+    setPriority(task?.priority ?? 'MEDIUM');
+    setDueDate(task?.due_date ? task.due_date.split('T')[0] : '');
+    setAssigneeId(task?.assignee_id ?? '');
     setErrors({});
-  }, [task, open]);
+  }
 
   const handleClose = () => {
     setTitle('');

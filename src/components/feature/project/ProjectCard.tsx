@@ -27,7 +27,7 @@ export function ProjectCard({ project, onClick, canEdit = false }: ProjectCardPr
       });
       toast.success('Cập nhật trạng thái thành công!');
       setShowStatusMenu(false);
-    } catch (error) {
+    } catch {
       toast.error('Không thể cập nhật trạng thái');
     }
   };
