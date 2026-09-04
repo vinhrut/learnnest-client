@@ -20,6 +20,14 @@ export function ProfileHero({ user }: { user: User }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Ảnh xem trước chỉ tan khi URL thật từ server đã về (upload ngầm xong), tránh
+  // nháy về ảnh cũ trong lúc chờ. Chỉnh state ngay trong render theo pattern React.
+  const [seenAvatarUrl, setSeenAvatarUrl] = useState(user.avatar_url);
+  if (user.avatar_url !== seenAvatarUrl) {
+    setSeenAvatarUrl(user.avatar_url);
+    setPreview(null);
+  }
+
   // Thu hồi object URL của ảnh xem trước để không rò rỉ bộ nhớ.
   useEffect(() => {
     if (!preview) return;
@@ -38,10 +46,10 @@ export function ProfileHero({ user }: { user: User }) {
       return;
     }
 
+    // Hiện ảnh mới ngay; upload chạy ngầm, không khoá thao tác khác trên trang.
     setPreview(URL.createObjectURL(file));
     uploadAvatar.mutate(file, {
       onSuccess: () => {
-        setPreview(null);
         toast.success('Đã cập nhật ảnh đại diện');
       },
       onError: (err) => {
@@ -85,7 +93,7 @@ export function ProfileHero({ user }: { user: User }) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={busy}
+              disabled={deleteAvatar.isPending}
               title={`Tải ảnh đại diện lên · JPG, PNG, WEBP hoặc GIF · tối đa ${formatFileSize(MAX_AVATAR_SIZE)}`}
               aria-label="Tải ảnh đại diện lên"
               className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface-variant shadow-sm transition-all duration-150 hover:bg-surface-container active:scale-90 disabled:cursor-not-allowed disabled:opacity-50"
