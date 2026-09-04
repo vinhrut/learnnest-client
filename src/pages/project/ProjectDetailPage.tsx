@@ -335,13 +335,12 @@ export function ProjectDetailPage() {
           onClick={() => handleTurnOnBox()}
           className='bg-blue-400 text-white w-12 h-12 rounded-[100%] flex justify-center items-center text-2xl  cursor-pointer fixItem'>
           c
-
         </div>
         <div style={{ display: turnOn ? "block" : "none" }}
-          className='w-70 bg-white chatBox border border-gray-200 rounded-3xl overflow-hidden'>
-            <div onClick={() => handleTurnOnBox()} className='cursor-pointer h-8 flex justify-end p-2 text-3xl items-center border border-b-gray-200 border-t-gray-200 border-l-gray-200 border-r-white '>
-              -
-            </div>
+          className='w-80 bg-white chatBox border border-gray-200 rounded-3xl overflow-hidden'>
+          <div onClick={() => handleTurnOnBox()} className='cursor-pointer h-8 flex justify-end p-2 text-3xl items-center border border-b-gray-200 border-t-gray-200 border-l-gray-200 border-r-white '>
+            -
+          </div>
           {
             id && <ChatBox id={id} />
           }

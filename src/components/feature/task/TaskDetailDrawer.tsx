@@ -379,6 +379,7 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
                       value={task.assignee_id ?? ''}
                       disabled={updateTask.isPending}
                       onChange={(e) => handleAssign(e.target.value)}
+                      onClear={() => handleAssign('')}
                       options={[
                         { value: '', label: 'Chưa giao' },
                         ...(members ?? []).map((member) => ({

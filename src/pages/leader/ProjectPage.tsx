@@ -16,6 +16,7 @@ export function LeaderProjectPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const canCreateProject = hasRole('LEAD');
+  const canEditProject = hasRole('LEAD');
 
   if (isLoading) {
     return (
@@ -54,6 +55,7 @@ export function LeaderProjectPage() {
             <ProjectCard
               key={project.id}
               project={project}
+              canEdit={canEditProject}
               onClick={() => navigate(`/leader/projects/${project.id}`)}
             />
           ))}

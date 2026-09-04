@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/Input';
 import { Spinner } from '@/components/ui/Spinner';
 import { toast } from '@/components/ui/toast';
 import { useCreateProject } from '@/hooks/projects/project.queries';
+import { projectKeys } from '@/hooks/projects/project.queries';
+import { useQueryClient } from '@tanstack/react-query';
 import type { ProjectStatus } from '@/types/project';
 
 interface CreateProjectModalProps {
@@ -14,6 +16,7 @@ interface CreateProjectModalProps {
 
 export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
   const createProject = useCreateProject();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -32,6 +35,8 @@ export function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
 
     try {
       await createProject.mutateAsync(formData);
+      // Refetch project list to refresh the data
+      await queryClient.refetchQueries({ queryKey: projectKeys.list() });
       toast.success('Tạo dự án thành công!');
       handleClose();
     } catch (error: unknown) {
