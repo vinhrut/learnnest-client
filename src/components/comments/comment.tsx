@@ -5,6 +5,7 @@ import "./comment.css";
 import { io } from "socket.io-client";
 import { commentApi } from "@/api/comment.api";
 import type { CommentProps } from "@/types/comment";
+import { env } from "@/config/env";
 
 export const Comment = ({ taskId, projectId }: CommentProps) => {
     const [commentType, setCommentType] = useState<
@@ -525,9 +526,7 @@ export const Comment = ({ taskId, projectId }: CommentProps) => {
         // SOCKET
         // =====================================================
 
-        const socket = io(
-            "http://localhost:3000"
-        );
+        const socket = io(env.apiBaseUrl);
 
         socket.on(
             "connect",

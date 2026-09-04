@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { FiAlignLeft, FiCalendar, FiClock, FiFlag, FiFolder, FiInfo, FiMessageSquare, FiPaperclip, FiUser, FiUserPlus } from 'react-icons/fi';
+import { FiAlignLeft, FiCalendar, FiClock, FiFlag, FiFolder, FiInfo, FiUser, FiUserPlus } from 'react-icons/fi';
 import { Drawer } from '@/components/ui/Drawer';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
-import { Tabs } from '@/components/ui/Tabs';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
@@ -12,9 +11,7 @@ import { Comment } from '@/components/comments/comment';
 import { Badge as StatusChip } from '@/components/ui/Badge';
 import { ExtensionRequestBanner } from './ExtensionRequestBanner';
 import { ExtensionRequestModal } from './ExtensionRequestModal';
-import { TaskHistoryList } from './TaskHistoryList';
 import { useAuth } from '@/hooks/useAuth';
-import { useTaskHistoryQuery } from '@/hooks/analytics/analytics.queries';
 import {
   useSubmitTask,
   useApproveTask,
@@ -65,15 +62,12 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
   const { data: extensionRequests } = useTaskExtensionsQuery(
     open ? task?.id : undefined,
   );
-  const { data: taskHistory, isLoading: taskHistoryLoading } =
-    useTaskHistoryQuery(open ? task?.id : undefined);
 
   const canAssign = canAssignTask(user);
   const { data: members } = useProjectMembersQuery(
     canAssign && open ? task?.project_id : undefined,
   );
 
-  const [newComment, setNewComment] = useState('');
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -185,60 +179,6 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
       { onSuccess: () => onRefresh?.() },
     );
   };
-
-  const tabs = [
-    {
-      id: 'discussion',
-      label: (
-        <span className="flex items-center gap-2">
-          <FiMessageSquare className="text-xl" />
-          Thảo luận
-        </span>
-      ),
-      content: (
-        <div className="space-y-4">
-          <p className="py-4 text-center text-body-md text-on-surface-variant">Chưa có bình luận nào.</p>
-          <div className="flex gap-4 items-start">
-            <Avatar name={user?.full_name} size="sm" />
-            <div className="flex-1 rounded-xl border border-outline-variant bg-surface focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 overflow-hidden transition-all">
-              <textarea
-                className="w-full resize-none border-none bg-transparent p-3 text-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:ring-0"
-                placeholder="Viết bình luận..."
-                rows={3}
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-              />
-              <div className="flex items-center justify-end border-t border-outline-variant bg-surface-container px-3 py-2">
-                <Button size="sm">Gửi</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'files',
-      label: (
-        <span className="flex items-center gap-2">
-          <FiPaperclip className="text-xl" />
-          Tài liệu
-        </span>
-      ),
-      content: <p className="text-body-md text-on-surface-variant py-4 text-center">Chưa có tài liệu đính kèm.</p>,
-    },
-    {
-      id: 'activity',
-      label: (
-        <span className="flex items-center gap-2">
-          <FiClock className="text-xl" />
-          Nhật ký
-        </span>
-      ),
-      content: (
-        <TaskHistoryList items={taskHistory} loading={taskHistoryLoading} />
-      ),
-    },
-  ];
 
   const renderActions = () => {
     const buttons: React.ReactNode[] = [];
@@ -552,7 +492,6 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
 
             <section>
               <Comment projectId={null} taskId={task?.id} />
-              {/* <Tabs tabs={tabs} /> */}
             </section>
           </div>
         </div>
