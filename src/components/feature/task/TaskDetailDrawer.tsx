@@ -12,7 +12,9 @@ import { Comment } from '@/components/comments/comment';
 import { Badge as StatusChip } from '@/components/ui/Badge';
 import { ExtensionRequestBanner } from './ExtensionRequestBanner';
 import { ExtensionRequestModal } from './ExtensionRequestModal';
+import { TaskHistoryList } from './TaskHistoryList';
 import { useAuth } from '@/hooks/useAuth';
+import { useTaskHistoryQuery } from '@/hooks/analytics/analytics.queries';
 import {
   useSubmitTask,
   useApproveTask,
@@ -63,6 +65,8 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
   const { data: extensionRequests } = useTaskExtensionsQuery(
     open ? task?.id : undefined,
   );
+  const { data: taskHistory, isLoading: taskHistoryLoading } =
+    useTaskHistoryQuery(open ? task?.id : undefined);
 
   const canAssign = canAssignTask(user);
   const { data: members } = useProjectMembersQuery(
@@ -230,7 +234,9 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
           Nhật ký
         </span>
       ),
-      content: <p className="text-body-md text-on-surface-variant py-4 text-center">Chưa có hoạt động nào.</p>,
+      content: (
+        <TaskHistoryList items={taskHistory} loading={taskHistoryLoading} />
+      ),
     },
   ];
 

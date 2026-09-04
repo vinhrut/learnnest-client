@@ -1,136 +1,58 @@
-import { useState } from 'react';
-import { FiAlertCircle, FiCheckCircle, FiClock, FiDownload, FiList, FiLoader } from 'react-icons/fi';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { useNavigate } from 'react-router-dom';
 import { AlertList } from '@/components/feature/dashboard/AlertList';
-import type { Task } from '@/types/task';
+import { DashboardOverview } from '@/components/feature/dashboard/DashboardOverview';
+import {
+  useDashboardOverviewQuery,
+  useExportDashboardExcel,
+} from '@/hooks/analytics/analytics.queries';
+import { useTasksQuery } from '@/hooks/tasks/task.queries';
 
-const MOCK_TASKS: Task[] = [
-  {
-    id: '1',
-    code: 'TSK-1042',
-    title: 'Hoàn thiện báo cáo tài chính Q3',
-    description: '',
-    status: 'WAITING_APPROVAL',
-    priority: 'HIGH',
-    assignment_status: 'WAITING_APPROVAL',
-    project_id: 'p1',
-    assignee_id: 'u1',
-    creator_id: 'u1',
-    due_date: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    assignee: {
-      id: 'u1',
-      username: 'tranb',
-      email: 'tranb@email.com',
-      full_name: 'Trần Thị B',
-      avatar_url: null,
-    },
-  },
-  {
-    id: '2',
-    code: 'TSK-1045',
-    title: 'Duyệt thiết kế giao diện Mobile',
-    description: '',
-    status: 'WAITING_APPROVAL',
-    priority: 'MEDIUM',
-    assignment_status: 'WAITING_APPROVAL',
-    project_id: 'p1',
-    assignee_id: 'u2',
-    creator_id: 'u1',
-    due_date: new Date(Date.now() + 3600000 * 2).toISOString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    assignee: {
-      id: 'u2',
-      username: 'levc',
-      email: 'levc@email.com',
-      full_name: 'Lê Văn C',
-      avatar_url: null,
-    },
-  },
-];
+const DUE_WINDOW_STARTED_AT = Date.now();
+const DUE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export function LeaderDashboardPage() {
-  const [dueTasks] = useState<Task[]>(MOCK_TASKS);
+  const navigate = useNavigate();
+  const overview = useDashboardOverviewQuery();
+  const exportExcel = useExportDashboardExcel();
+  const tasks = useTasksQuery();
+
+  const dueTasks = (tasks.data ?? []).filter((task) => {
+    if (!task.due_date) return false;
+    const due = new Date(task.due_date).getTime();
+    return due >= DUE_WINDOW_STARTED_AT && due <= DUE_WINDOW_STARTED_AT + DUE_WINDOW_MS;
+  });
 
   return (
     <div className="flex flex-col gap-6">
       <header>
-        <h1 className="text-headline-md text-on-surface font-bold">
-          Tổng quan Quản lý
+        <h1 className="text-headline-md font-bold text-on-surface">
+          Tong quan quan ly
         </h1>
         <p className="mt-1 text-body-md text-on-surface-variant">
-          Hiệu suất dự án và tình trạng công việc hiện tại.
+          Theo doi tinh trang cong viec, deadline va bao cao cua phan he Tracking.
         </p>
       </header>
 
-      <div className="flex justify-end">
-        <Button variant="secondary" leftIcon={<FiDownload />}>
-          Xuất báo cáo (PDF/Excel)
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-label-md text-on-surface-variant">Tổng số Task</span>
-            <FiList className="text-outline text-xl" />
-          </div>
-          <div className="text-headline-md text-on-surface font-bold">1,248</div>
-        </Card>
-        <Card className="p-4 border-l-4 border-l-[#0052CC]">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-label-md text-on-surface-variant">Cần làm</span>
-            <FiClock className="text-outline text-xl" />
-          </div>
-          <div className="text-headline-md text-on-surface font-bold">342</div>
-        </Card>
-        <Card className="p-4 border-l-4 border-l-[#FFAB00]">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-label-md text-on-surface-variant">Đang làm</span>
-            <FiLoader className="text-outline text-xl" />
-          </div>
-          <div className="text-headline-md text-on-surface font-bold">456</div>
-        </Card>
-        <Card className="p-4 border-l-4 border-l-[#36B37E]">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-label-md text-on-surface-variant">Đã xong</span>
-            <FiCheckCircle className="text-outline text-xl" />
-          </div>
-          <div className="text-headline-md text-on-surface font-bold">412</div>
-        </Card>
-        <Card className="p-4 border-l-4 border-l-[#FF5630]">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-label-md text-on-surface-variant">Quá hạn</span>
-            <FiAlertCircle className="text-[#FF5630] text-xl" />
-          </div>
-          <div className="text-headline-md text-[#FF5630] font-bold">38</div>
-        </Card>
-      </div>
-
       <div className="grid gap-6 lg:grid-cols-12">
-        <div className="lg:col-span-8 flex flex-col gap-6">
-          <Card title="Phân bổ trạng thái công việc">
-            <div className="h-64 flex items-center justify-center border border-dashed border-outline-variant rounded bg-surface-container-lowest">
-              <span className="text-on-surface-variant text-body-md">[Biểu đồ Pie Chart]</span>
-            </div>
-          </Card>
-          <Card title="Khối lượng công việc theo nhân viên">
-            <div className="h-64 flex items-end justify-between px-4 border-b border-l border-outline-variant relative">
-              <div className="w-12 bg-[#0052CC] h-[80%] rounded-t opacity-90 hover:opacity-100 transition-opacity relative group"></div>
-              <div className="w-12 bg-[#0052CC] h-[60%] rounded-t opacity-90 hover:opacity-100 transition-opacity relative group"></div>
-              <div className="w-12 bg-[#0052CC] h-[95%] rounded-t opacity-90 hover:opacity-100 transition-opacity relative group"></div>
-              <div className="w-12 bg-[#0052CC] h-[40%] rounded-t opacity-90 hover:opacity-100 transition-opacity relative group"></div>
-              <div className="w-12 bg-[#0052CC] h-[70%] rounded-t opacity-90 hover:opacity-100 transition-opacity relative group"></div>
-              <div className="w-12 bg-[#0052CC] h-[55%] rounded-t opacity-90 hover:opacity-100 transition-opacity relative group"></div>
-            </div>
-          </Card>
+        <div className="lg:col-span-8">
+          <DashboardOverview
+            data={overview.data}
+            loading={overview.isLoading}
+            onRefresh={() => {
+              overview.refetch();
+              tasks.refetch();
+            }}
+            onExport={() => exportExcel.mutate()}
+            exporting={exportExcel.isPending}
+          />
         </div>
 
         <div className="lg:col-span-4">
-          <AlertList tasks={dueTasks} />
+          <AlertList
+            tasks={dueTasks}
+            onTaskClick={(task) => navigate(`/leader/tasks?taskId=${task.id}`)}
+            onViewAllClick={() => navigate('/leader/tasks')}
+          />
         </div>
       </div>
     </div>
