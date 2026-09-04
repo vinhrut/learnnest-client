@@ -1,4 +1,6 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { FiCamera, FiTrash2 } from 'react-icons/fi';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -6,9 +8,21 @@ import { MultiSelect } from '@/components/ui/MultiSelect';
 import { PasswordInput } from '@/components/ui/PasswordInput';
 import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
+import { Spinner } from '@/components/ui/Spinner';
 import { toast } from '@/components/ui/toast';
-import { useCreateUser, useUpdateUser } from '@/hooks/users/users.queries';
+import {
+  useCreateUser,
+  useDeleteUserAvatar,
+  useUpdateUser,
+} from '@/hooks/users/users.queries';
+import { uploadAvatarInBackground } from '@/hooks/users/avatarUpload';
 import { errorMessages, guessFieldErrors } from '@/lib/errors';
+import {
+  IMAGE_ACCEPT,
+  MAX_AVATAR_SIZE,
+  formatFileSize,
+  validateImageFile,
+} from '@/lib/upload';
 import {
   ROLE_CODES,
   ROLE_LABEL,
@@ -71,16 +85,72 @@ export function UserFormModal({
   onClose: () => void;
 }) {
   const isEdit = !!user;
+  const queryClient = useQueryClient();
   const create = useCreateUser();
   const update = useUpdateUser();
+  const deleteAvatar = useDeleteUserAvatar();
 
   const [form, setForm] = useState<FormState>(() => initialForm(user));
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>(
     {},
   );
 
+  // Ảnh chọn từ máy: ở chế độ tạo mới phải giữ file tới lúc submit (chưa có id);
+  // ở chế độ sửa thì upload ngay nên chỉ cần preview tạm.
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Thu hồi object URL của ảnh xem trước để không rò rỉ bộ nhớ.
+  useEffect(() => {
+    if (!avatarPreview) return;
+    return () => URL.revokeObjectURL(avatarPreview);
+  }, [avatarPreview]);
+
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
+
+  const handleAvatarFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // Reset ngay để chọn lại đúng file vừa rồi vẫn kích hoạt onChange.
+    e.target.value = '';
+    if (!file) return;
+
+    const error = validateImageFile(file);
+    if (error) {
+      toast.error(error);
+      return;
+    }
+
+    setAvatarPreview(URL.createObjectURL(file));
+
+    if (isEdit && user) {
+      // Sửa: upload ngầm, không chặn nút Lưu. Modal có thể đóng trước khi xong.
+      set('avatar_url', '');
+      setAvatarUploading(true);
+      void uploadAvatarInBackground(queryClient, user.id, file, (updated) => {
+        set('avatar_url', updated.avatar_url ?? '');
+        setAvatarPreview(null);
+      }).finally(() => setAvatarUploading(false));
+    } else {
+      // Tạo mới: chưa có id, giữ file tới khi tạo xong user.
+      setAvatarFile(file);
+    }
+  };
+
+  const handleDeleteAvatar = () => {
+    if (!user) return;
+    deleteAvatar.mutate(user.id, {
+      onSuccess: () => {
+        setAvatarPreview(null);
+        setAvatarFile(null);
+        set('avatar_url', '');
+        toast.success('Đã xoá ảnh đại diện');
+      },
+      onError: (err) => errorMessages(err).forEach((m) => toast.error(m)),
+    });
+  };
 
   const validate = (): boolean => {
     const e: Partial<Record<keyof FormState, string>> = {};
@@ -140,11 +210,16 @@ export function UserFormModal({
       password: form.password,
       full_name: form.full_name.trim() || undefined,
       phone: form.phone.trim() || undefined,
-      avatar_url: form.avatar_url.trim() || undefined,
+      // Có file chọn từ máy thì upload sau khi tạo, không gửi URL text.
+      avatar_url: avatarFile ? undefined : form.avatar_url.trim() || undefined,
       roleCodes: form.roleCodes,
     };
     create.mutate(payload, {
-      onSuccess: () => {
+      onSuccess: (createdUser) => {
+        // Upload ảnh ngầm sau khi có id — không giữ modal lại chờ.
+        if (avatarFile) {
+          void uploadAvatarInBackground(queryClient, createdUser.id, avatarFile);
+        }
         toast.success('Đã tạo user — email thông tin đăng nhập đã được gửi');
         onClose();
       },
@@ -152,7 +227,11 @@ export function UserFormModal({
     });
   };
 
-  const pending = create.isPending || update.isPending;
+  const pending =
+    create.isPending || update.isPending || deleteAvatar.isPending;
+
+  const previewSrc = avatarPreview ?? (form.avatar_url || null);
+  const showRemoveAvatar = isEdit && !!user?.avatar_url;
 
   return (
     <Modal
@@ -216,21 +295,54 @@ export function UserFormModal({
           />
         </div>
 
-        <div className="flex items-end gap-3">
-          <div className="flex-1">
+        <div className="flex items-start gap-3">
+          <div className="relative shrink-0">
+            <Avatar
+              src={previewSrc}
+              name={form.full_name || form.username}
+              size="lg"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={avatarUploading}
+              title={`Tải ảnh lên · JPG, PNG, WEBP hoặc GIF · tối đa ${formatFileSize(MAX_AVATAR_SIZE)}`}
+              aria-label="Tải ảnh đại diện lên"
+              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface-variant shadow-sm transition-all duration-150 hover:bg-surface-container active:scale-90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {avatarUploading ? (
+                <Spinner className="h-3.5 w-3.5" />
+              ) : (
+                <FiCamera className="text-sm" />
+              )}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={IMAGE_ACCEPT}
+              className="hidden"
+              onChange={handleAvatarFile}
+            />
+          </div>
+
+          <div className="flex flex-1 flex-col gap-1">
             <Input
               label="Ảnh đại diện (URL)"
-              placeholder="https://..."
+              placeholder="https://... hoặc bấm biểu tượng máy ảnh để tải từ máy"
               value={form.avatar_url}
               onChange={(e) => set('avatar_url', e.target.value)}
             />
+            {showRemoveAvatar && (
+              <button
+                type="button"
+                onClick={handleDeleteAvatar}
+                disabled={pending}
+                className="inline-flex w-fit items-center gap-1 text-label-md text-error transition-colors hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <FiTrash2 className="text-sm" /> Xoá ảnh đại diện
+              </button>
+            )}
           </div>
-          <Avatar
-            src={form.avatar_url || null}
-            name={form.full_name || form.username}
-            size="lg"
-            className="mb-1"
-          />
         </div>
 
         {isEdit && (
