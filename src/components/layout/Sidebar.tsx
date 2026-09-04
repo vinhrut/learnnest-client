@@ -32,10 +32,12 @@ const NAV: NavItem[] = [
   { label: 'Hồ sơ', to: '/dev/profile', icon: FiUser, roles: ['USER'] },
 ];
 
+
 interface SidebarProps {
   open: boolean;
   onClose: () => void;
 }
+
 
 const ROLE_PRIORITY: RoleCode[] = ['ADMIN', 'LEAD', 'BA', 'USER'];
 

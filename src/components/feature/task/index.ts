@@ -7,3 +7,4 @@ export { TaskForm } from './TaskForm';
 export { TaskStatusBadge } from './TaskStatusBadge';
 export { ExtensionRequestBanner } from './ExtensionRequestBanner';
 export { ExtensionRequestModal } from './ExtensionRequestModal';
+export { TaskHistoryList } from './TaskHistoryList';
