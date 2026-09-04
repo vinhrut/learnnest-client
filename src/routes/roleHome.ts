@@ -6,6 +6,7 @@ import {
 } from '@/types/notification';
 
 export function homePathForUser(user: AuthUser | null | undefined): string {
+
   if (!user) return '/login';
   if (hasRole(user, 'ADMIN')) return '/admin/users';
   if (hasRole(user, 'LEAD')) return '/leader/dashboard';

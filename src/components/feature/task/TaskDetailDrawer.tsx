@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { Comment } from '@/components/comments/comment';
 import { Badge as StatusChip } from '@/components/ui/Badge';
 import { ExtensionRequestBanner } from './ExtensionRequestBanner';
 import { ExtensionRequestModal } from './ExtensionRequestModal';
@@ -357,9 +358,9 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
               <Badge tone="neutral">{task.code}</Badge>
               <Badge tone={
                 task.status === 'DOING' ? 'primary' :
-                task.status === 'DONE' || task.status === 'CLOSED' ? 'success' :
-                task.status === 'REJECTED' ? 'danger' :
-                task.status === 'WAITING_APPROVAL' ? 'warning' : 'neutral'
+                  task.status === 'DONE' || task.status === 'CLOSED' ? 'success' :
+                    task.status === 'REJECTED' ? 'danger' :
+                      task.status === 'WAITING_APPROVAL' ? 'warning' : 'neutral'
               }>
                 {statusConfig.label}
               </Badge>
@@ -442,10 +443,10 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
                   <span className="font-medium text-on-surface mt-1">
                     {task.due_date
                       ? new Date(task.due_date).toLocaleDateString('vi-VN', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric',
-                        })
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })
                       : 'Chưa có'}
                   </span>
                 </div>
@@ -550,7 +551,8 @@ export function TaskDetailDrawer({ task, open, onClose, onEdit, onRefresh }: Tas
             )}
 
             <section>
-              <Tabs tabs={tabs} />
+              <Comment projectId={null} taskId={task?.id} />
+              {/* <Tabs tabs={tabs} /> */}
             </section>
           </div>
         </div>

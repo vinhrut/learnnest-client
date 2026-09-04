@@ -1,31 +1,25 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AuthLayout } from '@/components/layout/AuthLayout';
+import { LoginPage } from '@/pages/auth/LoginPage';
+import { UserListPage } from '@/pages/users/UserListPage';
 import { RoleRoute } from './RoleRoute';
 import { RoleHome } from './RoleHomeRedirect';
 import { RouteError } from './RouteError';
-import { NotFound } from '@/pages/error/NotFound';
-
-import { LoginPage } from '@/pages/auth/LoginPage';
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
-
 import { ProfilePage } from '@/pages/ba/ProfilePage';
 import { TaskPage } from '@/pages/task/TaskPage';
+
 import { ProjectDetailPage } from '@/pages/project/ProjectDetailPage';
-
-import { UserListPage } from '@/pages/users/UserListPage';
-
 import { LeaderDashboardPage } from '@/pages/leader/DashboardPage';
 import { LeaderProjectPage } from '@/pages/leader/ProjectPage';
-
 import { BADashboardPage } from '@/pages/ba/DashboardPage';
 import { BAProjectPage } from '@/pages/ba/ProjectPage';
 import { BATaskPage } from '@/pages/ba/BATaskPage';
-
 import { DevDashboardPage } from '@/pages/dev/DashboardPage';
 import { DevProjectPage } from '@/pages/dev/ProjectPage';
 import { DevTaskPage } from '@/pages/dev/DevTaskPage';
-
+import { Forbidden, NotFound } from '@/pages/error/NotFound';
 export const router = createBrowserRouter([
   {
     errorElement: <RouteError />,
@@ -93,6 +87,7 @@ export const router = createBrowserRouter([
           { path: '/ba/profile', element: <ProfilePage /> },
         ],
       },
+      { path: '/403', element: <Forbidden /> },
 
       {
         element: (

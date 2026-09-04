@@ -1,0 +1,18 @@
+.boxImg:hover .hoverDelete {
+    display: block;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+.hoverDelete {
+    display: none;
+    background-color: transparent;
+    color: white;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.hoverDelete:hover {
+    color: red;
+}

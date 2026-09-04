@@ -16,10 +16,12 @@ export function LoginPage() {
   const navigate = useNavigate();
   const login = useLoginMutation();
   const { user, isAuthed } = useAuth();
-
+  
   useEffect(() => {
     if (isAuthed && user) {
+      console.log(homePathForUser(user))
       navigate(homePathForUser(user), { replace: true });
+
     }
   }, [isAuthed, user, navigate]);
 
