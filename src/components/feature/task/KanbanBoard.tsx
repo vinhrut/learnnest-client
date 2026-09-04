@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -36,10 +36,13 @@ const KANBAN_COLUMNS: { status: TaskStatus; label: string; isProtected?: boolean
 export function KanbanBoard({ tasks, onTaskClick, onTaskMove, loading, canMove }: KanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [localTasks, setLocalTasks] = useState<Task[]>(tasks);
+  const [syncedTasks, setSyncedTasks] = useState(tasks);
 
-  useEffect(() => {
+  // Sync local copy when the tasks prop changes (render-phase pattern).
+  if (tasks !== syncedTasks) {
+    setSyncedTasks(tasks);
     setLocalTasks(tasks);
-  }, [tasks]);
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

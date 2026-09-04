@@ -55,6 +55,14 @@ export function useUpdateUser() {
   });
 }
 
+export function useDeleteUserAvatar() {
+  const invalidate = useInvalidateUsers();
+  return useMutation({
+    mutationFn: (id: string) => usersApi.deleteAvatar(id),
+    onSuccess: invalidate,
+  });
+}
+
 export function useDeleteUser() {
   const invalidate = useInvalidateUsers();
   return useMutation({

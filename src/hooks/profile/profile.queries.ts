@@ -48,7 +48,11 @@ export function useUpdateMyProfile() {
 
   return useMutation({
     mutationFn: (payload: ProfilePayload) => usersApi.update(userId!, payload),
-    onSuccess: () => refreshProfileCaches(queryClient, setUser),
+    // Không await: mutation kết thúc ngay khi server trả lời, việc làm mới cache
+    // (kể cả gọi lại authApi.me) chạy ngầm để nút Lưu không kẹt spinner.
+    onSuccess: () => {
+      void refreshProfileCaches(queryClient, setUser);
+    },
   });
 }
 
@@ -60,7 +64,9 @@ export function useUploadMyAvatar() {
 
   return useMutation({
     mutationFn: (file: File) => usersApi.uploadAvatar(userId!, file),
-    onSuccess: () => refreshProfileCaches(queryClient, setUser),
+    onSuccess: () => {
+      void refreshProfileCaches(queryClient, setUser);
+    },
   });
 }
 
@@ -72,6 +78,8 @@ export function useDeleteMyAvatar() {
 
   return useMutation({
     mutationFn: () => usersApi.deleteAvatar(userId!),
-    onSuccess: () => refreshProfileCaches(queryClient, setUser),
+    onSuccess: () => {
+      void refreshProfileCaches(queryClient, setUser);
+    },
   });
 }
