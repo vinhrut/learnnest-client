@@ -348,7 +348,7 @@ export const Comment = ({ taskId, projectId }: CommentProps) => {
     // =========================================================
     useEffect(() => {
         if (!taskId && !projectId) return;
-
+          console.log("dddd")
         let ignore = false; // cờ đánh dấu effect này còn "sống" hay không
 
         // Reset refs (state đã được reset trong lúc render, xem prevKey ở trên)
@@ -369,7 +369,7 @@ export const Comment = ({ taskId, projectId }: CommentProps) => {
         }
 
         // SOCKET
-        const socket = io("https://learn-nestjs-api.onrender.com");
+        const socket = io("https://learnnest-api-00k0.onrender.com");
 
         socket.on("connect", () => {
             if (taskId) socket.emit("join_task", taskId);
@@ -396,6 +396,7 @@ export const Comment = ({ taskId, projectId }: CommentProps) => {
                 if (prev.some((item) => item?.id === newComment?.id)) return prev;
                 return [...prev, newComment];
             });
+              console.log("dddd",newComment)
             scrollToBottomIfProject();
         });
 
