@@ -136,7 +136,7 @@ export function ProjectDetailPage() {
 
   // chatBox
   const handleTurnOnBox = () => {
-    turnOn ? setTurnOn(false) : setTurnOn(true)
+    setTurnOn((prev) => !prev);
   }
   return (
     <div>

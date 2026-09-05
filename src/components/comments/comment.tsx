@@ -4,16 +4,16 @@ import { Button } from "../ui/Button";
 import "./comment.css";
 import { io } from "socket.io-client";
 import { commentApi } from "@/api/comment.api";
-import type { CommentProps } from "@/types/comment";
+import type { CommentItem, CommentProps } from "@/types/comment";
 
 // Helper: gộp mảng cũ + mới, loại bỏ trùng theo id
-const mergeUnique = (prev: any[], incoming: any[]) => {
+const mergeUnique = (prev: CommentItem[], incoming: CommentItem[]) => {
     const existingIds = new Set(prev.map((item) => item?.id));
     const filtered = incoming.filter((item) => !existingIds.has(item?.id));
     return [...prev, ...filtered];
 };
 
-const mergeUniquePrepend = (incoming: any[], prev: any[]) => {
+const mergeUniquePrepend = (incoming: CommentItem[], prev: CommentItem[]) => {
     const existingIds = new Set(prev.map((item) => item?.id));
     const filtered = incoming.filter((item) => !existingIds.has(item?.id));
     return [...filtered, ...prev];
@@ -26,7 +26,7 @@ export const Comment = ({ taskId, projectId }: CommentProps) => {
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    const [dataComment, setDataComment] = useState<any[]>([]);
+    const [dataComment, setDataComment] = useState<CommentItem[]>([]);
 
     const [imgFile, setImgFile] = useState<File | null>(null);
     const [imgPreview, setImgPreview] = useState<string | null>(null);
@@ -61,6 +61,19 @@ export const Comment = ({ taskId, projectId }: CommentProps) => {
     const auth = localStorage.getItem("ln.auth");
     const idUser = auth ? JSON.parse(auth) : null;
     const uniqueKey = taskId ?? projectId ?? "default";
+
+    // Reset toàn bộ state khi taskId/projectId đổi, thực hiện ngay trong lúc
+    // render (thay vì trong effect) để tránh cascading render.
+    // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+    const [prevKey, setPrevKey] = useState(uniqueKey);
+    if (prevKey !== uniqueKey) {
+        setPrevKey(uniqueKey);
+        setDataComment([]);
+        setSkip(1);
+        setProjectSkip(1);
+        setHasMore(true);
+        setProjectHasMore(true);
+    }
 
     // =========================================================
     // TASK - LOAD COMMENT
@@ -338,18 +351,16 @@ export const Comment = ({ taskId, projectId }: CommentProps) => {
 
         let ignore = false; // cờ đánh dấu effect này còn "sống" hay không
 
-        // Reset
-        setDataComment([]);
-        setSkip(1);
-        setProjectSkip(1);
-        setHasMore(true);
-        setProjectHasMore(true);
+        // Reset refs (state đã được reset trong lúc render, xem prevKey ở trên)
         loadingRef.current = false;
         projectLoadingRef.current = false;
         firstProjectLoadRef.current = true;
 
         // LOAD INITIAL DATA
+        // setState bên trong 2 hàm này chỉ chạy sau khi await xong (bất đồng bộ),
+        // không phải đồng bộ trong effect, nên không gây cascading render.
         if (taskId) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             callApiTaskComment(1, ignore);
         }
 
@@ -418,6 +429,10 @@ export const Comment = ({ taskId, projectId }: CommentProps) => {
             socket.off("attachment_deleted");
             socket.disconnect();
         };
+        // callApiTaskComment/callApiProjectComment cố ý không nằm trong deps:
+        // identity của chúng đổi theo hasMore/projectHasMore, thêm vào sẽ làm
+        // effect chạy lại và tạo/huỷ socket liên tục mỗi khi phân trang.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [taskId, projectId]);
 
     // =========================================================
@@ -425,15 +440,15 @@ export const Comment = ({ taskId, projectId }: CommentProps) => {
     // =========================================================
     const sortedProjectComments = [...dataComment].sort(
         (a, b) =>
-            new Date(a.created_at ?? a.createdAt).getTime() -
-            new Date(b.created_at ?? b.createdAt).getTime()
+            new Date(a.created_at ?? a.createdAt ?? 0).getTime() -
+            new Date(b.created_at ?? b.createdAt ?? 0).getTime()
     );
 
     // =========================================================
     // RENDER COMMENT ITEM
     // =========================================================
     const renderCommentItem = (
-        items: any,
+        items: CommentItem,
         index: number,
         project: boolean = false
     ) => {
@@ -855,8 +870,8 @@ export const Comment = ({ taskId, projectId }: CommentProps) => {
                     {[...dataComment]
                         .sort(
                             (a, b) =>
-                                new Date(b.created_at).getTime() -
-                                new Date(a.created_at).getTime()
+                                new Date(b.created_at ?? b.createdAt ?? 0).getTime() -
+                                new Date(a.created_at ?? a.createdAt ?? 0).getTime()
                         )
                         .map((items, index) =>
                             renderCommentItem(items, index, false)
