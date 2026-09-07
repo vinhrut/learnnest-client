@@ -70,6 +70,15 @@ export function KanbanBoard({ tasks, onTaskClick, onTaskMove, loading, canMove }
     }
   };
 
+  const resolveTargetStatus = (overId: string): TaskStatus | undefined => {
+    // Trường hợp 1: thả trực tiếp vào vùng column
+    const directColumn = KANBAN_COLUMNS.find((col) => col.status === overId);
+    if (directColumn) return directColumn.status;
+
+    // Trường hợp 2: thả lên một task khác -> lấy status của task đó
+    const overTask = localTasks.find((t) => t.id === overId);
+    return overTask?.status;
+  };
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
     if (!over) return;
@@ -80,15 +89,15 @@ export function KanbanBoard({ tasks, onTaskClick, onTaskMove, loading, canMove }
     const draggedTask = findTaskById(activeId);
     if (!draggedTask) return;
 
-    const overColumn = KANBAN_COLUMNS.find((col) => col.status === overId);
+    const targetStatus = resolveTargetStatus(overId);
     if (
-      overColumn &&
-      draggedTask.status !== overColumn.status &&
-      (canMove?.(draggedTask, overColumn.status) ?? true)
+      targetStatus &&
+      draggedTask.status !== targetStatus &&
+      (canMove?.(draggedTask, targetStatus) ?? true)
     ) {
       setLocalTasks((prev) =>
         prev.map((task) =>
-          task.id === activeId ? { ...task, status: overColumn.status } : task
+          task.id === activeId ? { ...task, status: targetStatus } : task
         )
       );
     }
@@ -106,13 +115,13 @@ export function KanbanBoard({ tasks, onTaskClick, onTaskMove, loading, canMove }
     const draggedTask = tasks.find((task) => task.id === activeId);
     if (!draggedTask) return;
 
-    const newColumn = KANBAN_COLUMNS.find((col) => col.status === overId);
-    if (newColumn && draggedTask.status !== newColumn.status) {
-      if (canMove && !canMove(draggedTask, newColumn.status)) {
+    const targetStatus = resolveTargetStatus(overId);
+    if (targetStatus && draggedTask.status !== targetStatus) {
+      if (canMove && !canMove(draggedTask, targetStatus)) {
         setLocalTasks(tasks);
         return;
       }
-      onTaskMove?.(activeId, newColumn.status);
+      onTaskMove?.(activeId, targetStatus);
     }
   };
 

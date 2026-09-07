@@ -260,9 +260,6 @@ export const Comment = ({ taskId, projectId }: CommentProps) => {
                 return;
             }
 
-            // =================================================
-            // FILE / IMAGE
-            // =================================================
             if (!file && !imgFile) return;
 
             const uploadFile = commentType === "file" ? file : imgFile;
@@ -348,7 +345,7 @@ export const Comment = ({ taskId, projectId }: CommentProps) => {
     // =========================================================
     useEffect(() => {
         if (!taskId && !projectId) return;
-          console.log("dddd")
+
         let ignore = false; // cờ đánh dấu effect này còn "sống" hay không
 
         // Reset refs (state đã được reset trong lúc render, xem prevKey ở trên)
@@ -396,7 +393,6 @@ export const Comment = ({ taskId, projectId }: CommentProps) => {
                 if (prev.some((item) => item?.id === newComment?.id)) return prev;
                 return [...prev, newComment];
             });
-              console.log("dddd",newComment)
             scrollToBottomIfProject();
         });
 
@@ -445,9 +441,6 @@ export const Comment = ({ taskId, projectId }: CommentProps) => {
             new Date(b.created_at ?? b.createdAt ?? 0).getTime()
     );
 
-    // =========================================================
-    // RENDER COMMENT ITEM
-    // =========================================================
     const renderCommentItem = (
         items: CommentItem,
         index: number,
